@@ -34,6 +34,13 @@ test('auto-enables required front matter options', () => {
   assert.equal(result.changes.length, 2);
 });
 
+test('auto-enables Liquid for theme media includes', () => {
+  const result = normalizeContent('---\ntitle: Test\n---\n\n{% include embed/video.html src="video.mp4" %}\n');
+
+  assert.match(result.content, /render_with_liquid: true/);
+  assert.equal(result.changes.length, 1);
+});
+
 test('reports invalid front matter and unclosed fences', () => {
   const result = validateContent('---\ntitle: Test\n---\n\n```js\nconst x = 1;\n', { draft: true });
 
@@ -65,4 +72,20 @@ test('reads folded YAML descriptions without mistaking the marker for content', 
 
   assert.equal(parsed.values.description, 'First line second line');
   assert.deepEqual(parsed.values.tags, ['one']);
+});
+
+test('reads nested preview image front matter', () => {
+  const parsed = parseFrontMatter('---\nimage:\n  path: https://img.example/cover.png\n  alt: Cover image\n  no_bg: true\n---\n');
+
+  assert.deepEqual(parsed.values.image, {
+    path: 'https://img.example/cover.png',
+    alt: 'Cover image',
+    no_bg: true
+  });
+});
+
+test('warns when Liquid syntax is disabled in front matter', () => {
+  const result = validateContent('---\ntitle: Test\nrender_with_liquid: false\n---\n\n{% include embed/youtube.html id="video" %}\n');
+
+  assert.ok(result.warnings.includes('Liquid syntax is present while render_with_liquid is false.'));
 });

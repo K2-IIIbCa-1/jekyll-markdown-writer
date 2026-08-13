@@ -22,7 +22,7 @@
       <aside class="sidebar">
         <div class="section-heading">
           <h2>Drafts</h2>
-          <button id="new-draft" class="icon-button" type="button" title="New draft">+</button>
+          <button id="new-draft" class="icon-button" type="button" title="New draft" aria-label="New draft"><span data-icon="plus"></span></button>
         </div>
         <p class="muted small">초안은 <code>_drafts/</code>에 저장됩니다.</p>
         <div id="draft-list" class="draft-list"></div>
@@ -63,30 +63,68 @@
 
           <div class="toolbar" aria-label="Markdown snippets">
             <span class="toolbar-label">Insert</span>
-            <button class="snippet-button" data-snippet="heading" type="button">Heading</button>
-            <button class="snippet-button" data-snippet="code" type="button">Code</button>
-            <button class="snippet-button" data-snippet="mermaid" type="button">Mermaid</button>
-            <button class="snippet-button" data-snippet="prompt" type="button">Prompt</button>
-            <button class="snippet-button" data-snippet="image" type="button">Image</button>
-            <button class="snippet-button" data-snippet="imageNormal" type="button">Image normal</button>
-            <button class="snippet-button" data-snippet="imageLeft" type="button">Image left</button>
-            <button class="snippet-button" data-snippet="imageRight" type="button">Image right</button>
-            <label class="image-align-control" for="image-align">
-              Align
-              <select id="image-align">
-                <option value="default">default</option>
-                <option value="normal">normal</option>
-                <option value="left">float left</option>
-                <option value="right">float right</option>
-              </select>
-            </label>
-            <button class="snippet-button" data-snippet="table" type="button">Table</button>
-            <button class="snippet-button" data-snippet="quote" type="button">Quote</button>
-            <button class="snippet-button" data-snippet="math" type="button">Math</button>
-            <label id="upload-image-control" class="upload-button snippet-button">
-              Upload image
-              <input id="image-upload" type="file" accept="image/*" multiple>
-            </label>
+            <button class="snippet-button icon-tool" data-snippet="heading" type="button" title="Heading" aria-label="Insert heading"><span data-icon="heading"></span></button>
+            <button class="snippet-button icon-tool" data-action="code-block" type="button" title="Code block" aria-label="Insert code block"><span data-icon="code"></span></button>
+            <button class="snippet-button icon-tool" data-snippet="mermaid" type="button" title="Mermaid diagram" aria-label="Insert Mermaid diagram"><span data-icon="workflow"></span></button>
+            <div class="palette-control">
+              <button id="prompt-toggle" class="snippet-button icon-tool palette-toggle" type="button" title="Prompt" aria-label="Insert prompt" aria-expanded="false" aria-controls="prompt-palette"><span data-icon="prompt"></span></button>
+              <div id="prompt-palette" class="palette-menu" hidden>
+                <button class="palette-swatch" data-prompt-type="tip" type="button"><span class="swatch-dot swatch-tip"></span>Tip</button>
+                <button class="palette-swatch" data-prompt-type="info" type="button"><span class="swatch-dot swatch-info"></span>Info</button>
+                <button class="palette-swatch" data-prompt-type="warning" type="button"><span class="swatch-dot swatch-warning"></span>Warning</button>
+                <button class="palette-swatch" data-prompt-type="danger" type="button"><span class="swatch-dot swatch-danger"></span>Danger</button>
+              </div>
+            </div>
+            <div class="toolbar-group image-snippet-group" aria-label="Image snippets">
+              <button class="snippet-button icon-tool" data-snippet="image" type="button" title="Image" aria-label="Insert image"><span data-icon="image"></span></button>
+              <button class="snippet-button icon-tool" data-snippet="imageNormal" type="button" title="Image: normal" aria-label="Insert normal image"><span data-icon="alignCenter"></span></button>
+              <button class="snippet-button icon-tool" data-snippet="imageLeft" type="button" title="Image: float left" aria-label="Insert left-aligned image"><span data-icon="alignLeft"></span></button>
+              <button class="snippet-button icon-tool" data-snippet="imageRight" type="button" title="Image: float right" aria-label="Insert right-aligned image"><span data-icon="alignRight"></span></button>
+            </div>
+            <button class="snippet-button icon-tool" data-snippet="table" type="button" title="Table" aria-label="Insert table"><span data-icon="table"></span></button>
+            <button class="snippet-button icon-tool" data-snippet="quote" type="button" title="Quote" aria-label="Insert quote"><span data-icon="quote"></span></button>
+            <button class="snippet-button icon-tool" data-snippet="math" type="button" title="Math" aria-label="Insert math block"><span data-icon="math"></span></button>
+            <button class="snippet-button icon-tool" data-action="footnote" type="button" title="Footnote" aria-label="Insert footnote"><span data-icon="footnote"></span></button>
+            <button class="snippet-button icon-tool" data-action="media" type="button" title="Media embed" aria-label="Insert media embed"><span data-icon="play"></span></button>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <span class="toolbar-label">Format</span>
+            <button class="snippet-button icon-tool format-button" data-format="bold" type="button" title="Bold" aria-label="Toggle bold"><span data-icon="bold"></span></button>
+            <button class="snippet-button icon-tool format-button" data-format="italic" type="button" title="Italic" aria-label="Toggle italic"><span data-icon="italic"></span></button>
+            <button class="snippet-button icon-tool format-button" data-format="strike" type="button" title="Strikethrough" aria-label="Toggle strikethrough"><span data-icon="strike"></span></button>
+            <div class="palette-control">
+              <button id="text-color-toggle" class="snippet-button icon-tool palette-toggle" type="button" title="Text color" aria-label="Text color" aria-expanded="false" aria-controls="text-color-palette"><span data-icon="palette"></span></button>
+              <div id="text-color-palette" class="palette-menu" hidden>
+                <button class="palette-swatch" data-tag="span" data-class-name="text-accent" data-palette="text" type="button"><span class="swatch-dot swatch-accent"></span>Accent</button>
+                <button class="palette-swatch" data-tag="span" data-class-name="text-info" data-palette="text" type="button"><span class="swatch-dot swatch-info"></span>Info</button>
+                <button class="palette-swatch" data-tag="span" data-class-name="text-warning" data-palette="text" type="button"><span class="swatch-dot swatch-warning"></span>Warning</button>
+                <button class="palette-swatch" data-tag="span" data-class-name="text-danger" data-palette="text" type="button"><span class="swatch-dot swatch-danger"></span>Danger</button>
+                <button class="palette-swatch" data-tag="span" data-class-name="text-muted" data-palette="text" type="button"><span class="swatch-dot swatch-muted"></span>Muted</button>
+              </div>
+            </div>
+            <div class="palette-control">
+              <button id="highlight-toggle" class="snippet-button icon-tool palette-toggle" type="button" title="Highlight" aria-label="Highlight" aria-expanded="false" aria-controls="highlight-palette"><span data-icon="highlight"></span></button>
+              <div id="highlight-palette" class="palette-menu" hidden>
+                <button class="palette-swatch" data-tag="mark" data-class-name="highlight-accent" data-palette="highlight" type="button"><span class="swatch-dot swatch-accent"></span>Accent</button>
+                <button class="palette-swatch" data-tag="mark" data-class-name="highlight-info" data-palette="highlight" type="button"><span class="swatch-dot swatch-info"></span>Info</button>
+                <button class="palette-swatch" data-tag="mark" data-class-name="highlight-warning" data-palette="highlight" type="button"><span class="swatch-dot swatch-warning"></span>Warning</button>
+                <button class="palette-swatch" data-tag="mark" data-class-name="highlight-danger" data-palette="highlight" type="button"><span class="swatch-dot swatch-danger"></span>Danger</button>
+                <button class="palette-swatch" data-tag="mark" data-class-name="highlight-muted" data-palette="highlight" type="button"><span class="swatch-dot swatch-muted"></span>Muted</button>
+              </div>
+            </div>
+            <div class="image-upload-group" aria-label="Upload image">
+              <label id="upload-image-control" class="upload-button snippet-button icon-tool" title="Upload image">
+                <span data-icon="upload"></span>
+                <span class="sr-only">Upload image</span>
+                <input id="image-upload" type="file" accept="image/*" multiple>
+              </label>
+              <div class="image-align-group" aria-label="Uploaded image alignment">
+                <button class="image-align-button" data-image-align="default" type="button" title="Uploaded image: default" aria-label="Uploaded image: default" aria-pressed="true"><span data-icon="image"></span></button>
+                <button class="image-align-button" data-image-align="normal" type="button" title="Uploaded image: normal" aria-label="Uploaded image: normal" aria-pressed="false"><span data-icon="alignCenter"></span></button>
+                <button class="image-align-button" data-image-align="left" type="button" title="Uploaded image: float left" aria-label="Uploaded image: float left" aria-pressed="false"><span data-icon="alignLeft"></span></button>
+                <button class="image-align-button" data-image-align="right" type="button" title="Uploaded image: float right" aria-label="Uploaded image: float right" aria-pressed="false"><span data-icon="alignRight"></span></button>
+              </div>
+            </div>
+            <button class="snippet-button icon-tool" data-action="front-matter" type="button" title="Post settings" aria-label="Post settings"><span data-icon="settings"></span></button>
           </div>
 
           <div class="editor-grid">
@@ -114,7 +152,7 @@
             <p class="eyebrow">NEW DRAFT</p>
             <h2>새 글</h2>
           </div>
-          <button id="close-dialog" class="icon-button" value="cancel" type="button">×</button>
+          <button id="close-dialog" class="icon-button" value="cancel" type="button" title="Close" aria-label="Close"><span data-icon="close"></span></button>
         </div>
         <label for="new-title">Title</label>
         <input id="new-title" name="title" required maxlength="160" placeholder="글 제목">
@@ -127,6 +165,102 @@
         <div class="dialog-actions">
           <button id="cancel-dialog" class="button button-quiet" value="cancel" type="button">Cancel</button>
           <button id="create-draft" class="button button-primary" value="default" type="submit">Create</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="code-dialog">
+      <form id="code-form" method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">CODE BLOCK</p>
+            <h2>Code settings</h2>
+          </div>
+          <button class="icon-button dialog-close" value="cancel" type="submit" title="Close" aria-label="Close"><span data-icon="close"></span></button>
+        </div>
+        <label for="code-language">Language</label>
+        <input id="code-language" name="language" list="code-language-list" placeholder="plaintext">
+        <datalist id="code-language-list">
+          <option value="plaintext"></option><option value="csharp"></option><option value="cpp"></option><option value="hlsl"></option><option value="shaderlab"></option><option value="javascript"></option><option value="typescript"></option><option value="python"></option><option value="yaml"></option><option value="json"></option><option value="bash"></option><option value="powershell"></option><option value="html"></option><option value="css"></option><option value="sql"></option><option value="java"></option><option value="go"></option><option value="rust"></option><option value="lua"></option><option value="ruby"></option><option value="toml"></option><option value="dockerfile"></option><option value="liquid"></option>
+        </datalist>
+        <label for="code-file">File name <span class="muted small">(optional)</span></label>
+        <input id="code-file" name="file" placeholder="src/example.cs">
+        <label class="dialog-check"><input id="code-no-line-numbers" name="noLineNumbers" type="checkbox"><span>Hide line numbers</span></label>
+        <div class="dialog-actions">
+          <button class="button button-quiet" value="cancel" type="submit">Cancel</button>
+          <button class="button button-primary" id="insert-code" value="default" type="submit">Insert</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="media-dialog">
+      <form id="media-form" method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">MEDIA EMBED</p>
+            <h2>Insert media</h2>
+          </div>
+          <button class="icon-button dialog-close" value="cancel" type="submit" title="Close" aria-label="Close"><span data-icon="close"></span></button>
+        </div>
+        <label for="media-type">Type</label>
+        <select id="media-type" name="type">
+          <option value="youtube">YouTube</option>
+          <option value="audio">Audio URL</option>
+          <option value="video">Video URL</option>
+        </select>
+        <label for="media-source">URL or video ID</label>
+        <input id="media-source" name="source" required placeholder="https://youtu.be/...">
+        <label id="media-title-label" for="media-title">Title <span class="muted small">(optional)</span></label>
+        <input id="media-title" name="title" placeholder="Media title">
+        <div id="video-options" class="dialog-options hidden">
+          <label class="dialog-check"><input id="media-autoplay" type="checkbox"><span>Autoplay</span></label>
+          <label class="dialog-check"><input id="media-loop" type="checkbox"><span>Loop</span></label>
+          <label class="dialog-check"><input id="media-muted" type="checkbox"><span>Muted</span></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="button button-quiet" value="cancel" type="submit">Cancel</button>
+          <button class="button button-primary" id="insert-media" value="default" type="submit">Insert</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="front-matter-dialog">
+      <form id="front-matter-form" method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">POST SETTINGS</p>
+            <h2>Front matter</h2>
+          </div>
+          <button class="icon-button dialog-close" value="cancel" type="submit" title="Close" aria-label="Close"><span data-icon="close"></span></button>
+        </div>
+        <label for="front-description">Description</label>
+        <input id="front-description" name="description" maxlength="240">
+        <label for="front-categories">Categories <span class="muted small">(comma separated)</span></label>
+        <input id="front-categories" name="categories" placeholder="dev, web">
+        <label for="front-tags">Tags <span class="muted small">(comma separated)</span></label>
+        <input id="front-tags" name="tags" placeholder="markdown, jekyll">
+        <label for="front-image-path">Preview image path or URL</label>
+        <div class="dialog-inline">
+          <input id="front-image-path" name="imagePath" placeholder="cover.png or https://..."><label id="front-image-upload-control" class="button button-quiet dialog-upload" title="Upload preview image">
+            <span data-icon="upload"></span>
+            <span class="sr-only">Upload preview image</span>
+            <input id="front-image-upload" type="file" accept="image/*">
+          </label>
+        </div>
+        <label for="front-image-alt">Preview image alt text</label>
+        <input id="front-image-alt" name="imageAlt" maxlength="240" placeholder="Short description of the image">
+        <div class="dialog-options">
+          <label class="dialog-check"><input id="front-image-no-bg" name="imageNoBg" type="checkbox"><span>Remove preview image background</span></label>
+          <label class="dialog-check"><input id="front-pin" name="pin" type="checkbox"><span>Pin on home</span></label>
+          <label class="dialog-check"><input id="front-toc" name="toc" type="checkbox"><span>Show table of contents</span></label>
+          <label class="dialog-check"><input id="front-comments" name="comments" type="checkbox"><span>Enable comments</span></label>
+          <label class="dialog-check"><input id="front-math" name="math" type="checkbox"><span>Enable MathJax</span></label>
+          <label class="dialog-check"><input id="front-mermaid" name="mermaid" type="checkbox"><span>Enable Mermaid</span></label>
+          <label class="dialog-check"><input id="front-liquid" name="render_with_liquid" type="checkbox"><span>Disable Liquid rendering</span></label>
+        </div>
+        <div class="dialog-actions">
+          <button class="button button-quiet" value="cancel" type="submit">Cancel</button>
+          <button class="button button-primary" id="save-front-matter" value="default" type="submit">Apply</button>
         </div>
       </form>
     </dialog>

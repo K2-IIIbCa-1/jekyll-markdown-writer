@@ -1,5 +1,24 @@
 # Third-party licenses
 
+## Lucide Icons
+
+The inline toolbar icons in `public/icons.js` are adapted from [Lucide Icons](https://lucide.dev/).
+
+Lucide is released under the [ISC License](https://lucide.dev/license). The copied/adapted icon data is included here so the standalone writer does not need to load an icon package or CDN at runtime.
+
+```text
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+RESULTING FROM LOSS OF USE, DATA OR PROFITS.
+```
+
 ## Packages
 
 ### [MIT License](https://opensource.org/license/mit/)

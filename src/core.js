@@ -87,6 +87,19 @@ export function parseFrontMatter(content) {
 
     const rawValue = field[2].trim();
 
+    if (!rawValue && index + 1 < lines.length && /^\s+/.test(lines[index + 1])) {
+      const nested = {};
+
+      while (index + 1 < lines.length && /^\s+/.test(lines[index + 1])) {
+        index += 1;
+        const nestedField = lines[index].match(/^\s+([A-Za-z_][\w-]*):\s*(.*)$/);
+        if (nestedField) nested[nestedField[1]] = parseScalar(nestedField[2]);
+      }
+
+      values[field[1]] = nested;
+      continue;
+    }
+
     if (/^[>|][-+]?$/.test(rawValue)) {
       const continuation = [];
 
@@ -149,7 +162,8 @@ export function normalizeContent(content) {
 
   const requirements = [
     { key: 'mermaid', pattern: /(^|\n)```mermaid\b/i, label: 'Mermaid', value: true },
-    { key: 'math', pattern: /\$\$|\\begin\{(?:equation|align|gather)/, label: 'MathJax', value: true }
+    { key: 'math', pattern: /\$\$|\\begin\{(?:equation|align|gather)/, label: 'MathJax', value: true },
+    { key: 'render_with_liquid', pattern: /\{%\s*include\s+embed\//u, label: 'Liquid', value: true }
   ];
 
   requirements.forEach(({ key, pattern, label, value }) => {
@@ -159,6 +173,10 @@ export function normalizeContent(content) {
       normalized = setFrontMatterValue(normalized, key, value);
       changes.push(`${label} 옵션을 자동으로 활성화했습니다.`);
     } else if (parsed.values[key] === false) {
+      if (key === 'render_with_liquid') {
+        warnings.push('Liquid syntax is present while render_with_liquid is false.');
+        return;
+      }
       warnings.push(`${label} 문법이 있지만 ${key}: false로 설정되어 있습니다.`);
     }
   });

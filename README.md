@@ -13,6 +13,11 @@
 Jekyll 저장소에서 글을 작성하고 `_drafts/`, `_posts/`를 관리하는 로컬 Markdown 편집기입니다.
 
 - CodeMirror 기반 Markdown·코드 구문 하이라이팅
+- 코드블록 언어·파일명·줄 번호 표시 여부 설정
+- YouTube·오디오·비디오 URL용 Jekyll include 삽입
+- 선택 영역 굵게·기울임·취소선 토글 및 테마 색상/배경 강조 팔레트
+- Tip·Info·Warning·Danger 프롬프트 프리셋
+- 게시글 설정창에서 description·categories·tags·대표 이미지·옵션 front matter 수정
 - front matter와 일부 문법 검사
 - Jekyll 미리보기 실행 및 링크
 - Cloudflare R2 토큰 연결을 통한 빠른 이미지 업로드
@@ -100,6 +105,8 @@ images/YYYY-MM-DD_HHMMSS/screenshot.png
 5. `Preview`를 켜면 Jekyll 서버가 실행됩니다. `Open Jekyll`로 실제 테마에서 확인합니다.
 6. R2가 설정되어 있으면 `Upload image`로 이미지를 업로드하고 Markdown을 현재 커서 위치에 삽입합니다.
 7. `Publish`는 초안에 현재 시각을 `date`로 기록하고 `_posts/`로 이동합니다.
+
+`Code block`은 언어, 파일명, `nolineno`(줄 번호 숨김)를 선택해 fenced code block을 삽입합니다. `Media embed`는 현재 테마의 `_includes/embed/` 문법을 사용하므로 YouTube·오디오·비디오 URL을 넣어야 합니다. 오디오·비디오는 아직 파일 업로드 대상이 아니며 외부 URL을 삽입합니다. `Post settings`는 시스템 필드(date·post_id·media_subpath)를 제외한 주요 front matter와 홈/SEO용 `image.path`, `image.alt`를 수정합니다. R2가 설정되어 있으면 대표 이미지도 설정창에서 업로드할 수 있습니다. Liquid를 끄면 Liquid include도 렌더링되지 않으므로 미디어 문법을 사용할 때는 활성화 상태를 유지하세요.
 
 왼쪽 `Posts` 목록에서 기존 글을 열어 수정할 수 있습니다. 기존 글은 `Save changes`로 저장합니다.
 

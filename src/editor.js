@@ -30,6 +30,7 @@ import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { oneDarkTheme } from '@codemirror/theme-one-dark';
 import { HighlightStyle, LanguageDescription, LanguageSupport, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
+import { insertFootnote, isInsideFencedCode, toggleDelimited, toggleHtmlClass, updateFrontMatter } from './formatting.js';
 
 const legacyLanguage = (name, alias, parser) => LanguageDescription.of({
   name,
@@ -221,7 +222,7 @@ const writerTheme = EditorView.theme({
     outlineOffset: '-1px'
   },
   '.cm-selectionBackground, ::selection': {
-    backgroundColor: '#244b36 !important'
+    backgroundColor: '#2b5a40 !important'
   }
 }, { dark: true });
 
@@ -274,6 +275,45 @@ export function createMarkdownEditor({ parent, value = '', wrapLines = false, on
       view.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length } });
       view.focus();
     },
+    toggleDelimited: ({ prefix, suffix, placeholder = 'text' }) => {
+      const { from, to } = view.state.selection.main;
+      const result = toggleDelimited(view.state.doc.toString(), from, to, prefix, suffix, placeholder);
+      if (!result) return false;
+      view.dispatch({
+        changes: { from: result.from, to: result.to, insert: result.insert },
+        selection: { anchor: result.selectionFrom, head: result.selectionTo }
+      });
+      view.focus();
+      return true;
+    },
+    toggleHtmlClass: ({ tag, className, placeholder = 'text' }) => {
+      const { from, to } = view.state.selection.main;
+      const result = toggleHtmlClass(view.state.doc.toString(), from, to, { tag, className, placeholder });
+      if (!result) return false;
+      view.dispatch({
+        changes: { from: result.from, to: result.to, insert: result.insert },
+        selection: { anchor: result.selectionFrom, head: result.selectionTo }
+      });
+      view.focus();
+      return true;
+    },
+    insertFootnote: () => {
+      const { from, to } = view.state.selection.main;
+      const result = insertFootnote(view.state.doc.toString(), from, to);
+      if (!result) return false;
+      view.dispatch({ changes: result.changes, selection: { anchor: result.selection } });
+      view.focus();
+      return true;
+    },
+    updateFrontMatter: (updates) => {
+      const current = view.state.doc.toString();
+      const next = updateFrontMatter(current, updates);
+      if (!next || next === current) return false;
+      view.dispatch({ changes: { from: 0, to: current.length, insert: next } });
+      view.focus();
+      return true;
+    },
+    isInsideFencedCode: () => isInsideFencedCode(view.state.doc.toString(), view.state.selection.main.from),
     setLineWrapping: (enabled) => view.dispatch({
       effects: lineWrapping.reconfigure(enabled ? EditorView.lineWrapping : [])
     }),
