@@ -50,6 +50,12 @@ p { margin: 0; }
 
 h1 { font-size: 1.25rem; letter-spacing: 0.02em; }
 h2 { font-size: 1.1rem; }
+h1,
+h2,
+.topbar > div:first-child,
+.editor-header > div:first-child { min-width: 0; }
+h1,
+#draft-title { overflow-wrap: anywhere; }
 
 .eyebrow {
   margin-bottom: 5px;
@@ -100,6 +106,7 @@ h2 { font-size: 1.1rem; }
 .sidebar {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   padding: 20px 14px;
   border-right: 1px solid var(--border);
   background: #111715;
@@ -114,11 +121,13 @@ h2 { font-size: 1.1rem; }
 .sidebar > .small { margin-top: 8px; }
 code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 
-.draft-list { display: grid; gap: 5px; margin-top: 18px; }
+.draft-list { display: grid; gap: 5px; min-width: 0; margin-top: 18px; }
 
 .draft-item {
   display: block;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
   padding: 10px;
   border: 1px solid transparent;
   color: var(--text);
@@ -128,10 +137,10 @@ code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Consolas
 
 .draft-item:hover,
 .draft-item.active { border-color: var(--border-strong); background: var(--surface-raised); }
-.draft-item-title { display: block; overflow: hidden; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
-.draft-item-meta { display: block; margin-top: 5px; color: var(--muted); font: 0.66rem ui-monospace, SFMono-Regular, Consolas, monospace; }
-.sidebar-footer { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
-.status-pill { display: inline-block; padding: 3px 7px; border: 1px solid var(--border); color: var(--muted); font: 0.68rem ui-monospace, SFMono-Regular, Consolas, monospace; }
+.draft-item-title { display: block; max-width: 100%; overflow: hidden; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
+.draft-item-meta { display: block; max-width: 100%; margin-top: 5px; overflow: hidden; color: var(--muted); font: 0.66rem ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-footer { min-width: 0; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
+.status-pill { display: inline-block; max-width: 100%; overflow: hidden; padding: 3px 7px; border: 1px solid var(--border); color: var(--muted); font: 0.68rem ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
 .status-pill.ready { border-color: var(--accent); color: var(--accent); }
 .status-pill.error { border-color: var(--danger); color: var(--danger); }
 .sidebar-footer p { margin-top: 8px; line-height: 1.5; }
@@ -143,12 +152,12 @@ code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Consolas
 .hidden { display: none !important; }
 
 .editor-view { max-width: 1180px; margin: 0 auto; }
-.editor-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.editor-header { display: flex; align-items: end; justify-content: space-between; min-width: 0; gap: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 .editor-header h2 { font-size: 1.35rem; }
 .editor-actions { flex-wrap: wrap; justify-content: end; }
 
-.messages { display: grid; gap: 6px; margin: 12px 0; }
-.message { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface); font-size: 0.78rem; }
+.messages { display: grid; gap: 6px; min-width: 0; margin: 12px 0; }
+.message { overflow-wrap: anywhere; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface); font-size: 0.78rem; }
 .message.warning { border-left-color: var(--warning); }
 .message.error { border-left-color: var(--danger); }
 .git-panel { display: grid; gap: 6px; margin: 12px 0; padding: 9px 10px; border: 1px solid var(--border); background: var(--surface); font-size: 0.78rem; }

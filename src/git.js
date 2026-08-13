@@ -40,6 +40,12 @@ async function runGit(rootDir, args) {
     );
   } catch (error) {
     const detail = String(error.stderr || error.stdout || '').trim();
+    if (/repository not found/iu.test(detail)) {
+      throw new GitOperationError('원격 저장소를 찾을 수 없습니다. origin URL과 GitHub 인증 상태를 확인하세요.', 409);
+    }
+    if (/authentication failed|could not read username/iu.test(detail)) {
+      throw new GitOperationError('GitHub 인증에 실패했습니다. GitHub Desktop에서 다시 로그인하거나 SSH 원격을 사용하세요.', 409);
+    }
     throw new GitOperationError(detail || error.message, 409);
   }
 }
