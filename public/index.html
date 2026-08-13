@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jekyll Writer</title>
+    <link rel="stylesheet" href="/writer.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">LOCAL TOOL / MARKDOWN WORKBENCH</p>
+        <h1 id="app-title">Jekyll Writer</h1>
+      </div>
+      <div class="top-actions">
+        <button id="preview-toggle" class="button button-quiet" type="button">Preview: stopped</button>
+        <a id="preview-link" class="button button-primary" href="#" target="_blank" rel="noreferrer">Open Jekyll</a>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="section-heading">
+          <h2>Drafts</h2>
+          <button id="new-draft" class="icon-button" type="button" title="New draft">+</button>
+        </div>
+        <p class="muted small">초안은 <code>_drafts/</code>에 저장됩니다.</p>
+        <div id="draft-list" class="draft-list"></div>
+        <div class="section-heading list-section-heading">
+          <h2>Posts</h2>
+        </div>
+        <p class="muted small">발행된 글을 직접 수정합니다.</p>
+        <div id="post-list" class="draft-list"></div>
+        <div class="sidebar-footer">
+          <span id="r2-status" class="status-pill">R2 checking…</span>
+          <p class="muted small">로컬 서버가 R2 자격 증명을 보관합니다.</p>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <div id="empty-state" class="empty-state">
+          <p class="eyebrow">READY WHEN YOU ARE</p>
+          <h2>초안을 하나 만들어 시작하세요.</h2>
+          <p>본문은 아래 편집 영역에서 작성하고, 저장된 글은 Jekyll로 실제 테마에서 확인할 수 있습니다.</p>
+          <button id="new-draft-empty" class="button button-primary" type="button">New draft</button>
+        </div>
+
+        <div id="editor-view" class="editor-view hidden">
+          <div class="editor-header">
+            <div>
+              <p id="draft-id" class="eyebrow"></p>
+              <h2 id="draft-title">Draft</h2>
+            </div>
+            <div class="editor-actions">
+              <span id="save-state" class="muted small">저장되지 않음</span>
+              <button id="save-draft" class="button button-quiet" type="button">Save</button>
+              <button id="validate-draft" class="button button-quiet" type="button">Validate</button>
+              <button id="publish-draft" class="button button-primary" type="button">Publish</button>
+            </div>
+          </div>
+
+          <div id="messages" class="messages" aria-live="polite"></div>
+
+          <div class="toolbar" aria-label="Markdown snippets">
+            <span class="toolbar-label">Insert</span>
+            <button class="snippet-button" data-snippet="heading" type="button">Heading</button>
+            <button class="snippet-button" data-snippet="code" type="button">Code</button>
+            <button class="snippet-button" data-snippet="mermaid" type="button">Mermaid</button>
+            <button class="snippet-button" data-snippet="prompt" type="button">Prompt</button>
+            <button class="snippet-button" data-snippet="image" type="button">Image</button>
+            <button class="snippet-button" data-snippet="imageNormal" type="button">Image normal</button>
+            <button class="snippet-button" data-snippet="imageLeft" type="button">Image left</button>
+            <button class="snippet-button" data-snippet="imageRight" type="button">Image right</button>
+            <label class="image-align-control" for="image-align">
+              Align
+              <select id="image-align">
+                <option value="default">default</option>
+                <option value="normal">normal</option>
+                <option value="left">float left</option>
+                <option value="right">float right</option>
+              </select>
+            </label>
+            <button class="snippet-button" data-snippet="table" type="button">Table</button>
+            <button class="snippet-button" data-snippet="quote" type="button">Quote</button>
+            <button class="snippet-button" data-snippet="math" type="button">Math</button>
+            <label id="upload-image-control" class="upload-button snippet-button">
+              Upload image
+              <input id="image-upload" type="file" accept="image/*" multiple>
+            </label>
+          </div>
+
+          <div class="editor-grid">
+            <label class="editor-label" for="content">Markdown</label>
+            <div id="content" aria-label="Markdown editor"></div>
+            <div class="editor-footer">
+              <span id="word-count" class="muted small">0 words</span>
+              <div class="editor-footer-options">
+                <label class="editor-toggle" for="line-wrapping">
+                  <input id="line-wrapping" type="checkbox">
+                  <span>Wrap lines</span>
+                </label>
+                <span class="muted small">Ctrl/Cmd + S로 저장</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="new-draft-dialog">
+      <form id="new-draft-form" method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">NEW DRAFT</p>
+            <h2>새 글</h2>
+          </div>
+          <button id="close-dialog" class="icon-button" value="cancel" type="button">×</button>
+        </div>
+        <label for="new-title">Title</label>
+        <input id="new-title" name="title" required maxlength="160" placeholder="글 제목">
+        <label for="new-description">Description</label>
+        <input id="new-description" name="description" maxlength="240" placeholder="짧은 설명 (선택사항)">
+        <label for="new-categories">Categories</label>
+        <input id="new-categories" name="categories" placeholder="예: dev, web">
+        <label for="new-tags">Tags</label>
+        <input id="new-tags" name="tags" placeholder="쉼표로 구분">
+        <div class="dialog-actions">
+          <button id="cancel-dialog" class="button button-quiet" value="cancel" type="button">Cancel</button>
+          <button id="create-draft" class="button button-primary" value="default" type="submit">Create</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="/writer.js" type="module"></script>
+  </body>
+</html>
