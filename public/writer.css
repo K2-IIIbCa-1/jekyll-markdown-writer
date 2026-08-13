@@ -126,22 +126,36 @@ code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Consolas
 
 .draft-list { display: grid; gap: 5px; min-width: 0; margin-top: 18px; }
 
+.draft-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.draft-item-row.has-delete { grid-template-columns: minmax(0, 1fr) 32px; }
+.draft-item-row:hover,
+.draft-item-row.active { border-color: var(--border-strong); background: var(--surface-raised); }
+
 .draft-item {
   display: block;
   width: 100%;
   min-width: 0;
   overflow: hidden;
   padding: 10px;
-  border: 1px solid transparent;
+  border: 0;
   color: var(--text);
-  background: transparent;
+  background: none;
   text-align: left;
 }
 
-.draft-item:hover,
-.draft-item.active { border-color: var(--border-strong); background: var(--surface-raised); }
+.draft-item:hover { color: var(--accent-strong); }
 .draft-item-title { display: block; max-width: 100%; overflow: hidden; font-size: 0.82rem; text-overflow: ellipsis; white-space: nowrap; }
 .draft-item-meta { display: block; max-width: 100%; margin-top: 5px; overflow: hidden; color: var(--muted); font: 0.66rem ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.draft-delete { width: 30px; height: 30px; margin: 4px 1px 4px 0; border-color: transparent; color: var(--muted); background: transparent; }
+.draft-delete:hover { border-color: var(--danger); color: var(--danger); background: transparent; }
 .sidebar-footer { min-width: 0; margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border); }
 .status-pill { display: inline-block; max-width: 100%; overflow: hidden; padding: 3px 7px; border: 1px solid var(--border); color: var(--muted); font: 0.68rem ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
 .status-pill.ready { border-color: var(--accent); color: var(--accent); }

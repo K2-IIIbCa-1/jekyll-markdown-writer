@@ -192,11 +192,14 @@ function renderEntryList(selector, entries, emptyText, kind) {
   }
 
   entries.forEach((draft) => {
+    const row = document.createElement('div');
     const button = document.createElement('button');
     const title = document.createElement('span');
     const meta = document.createElement('span');
 
-    button.className = `draft-item${state.kind === kind && state.draft?.name === draft.name ? ' active' : ''}`;
+    const active = state.kind === kind && state.draft?.name === draft.name;
+    row.className = `draft-item-row${kind === 'draft' ? ' has-delete' : ''}${active ? ' active' : ''}`;
+    button.className = 'draft-item';
     button.type = 'button';
     title.className = 'draft-item-title';
     title.textContent = draft.title;
@@ -204,7 +207,20 @@ function renderEntryList(selector, entries, emptyText, kind) {
     meta.textContent = draft.postId || draft.name;
     button.append(title, meta);
     button.addEventListener('click', () => openEntry(kind, draft.name));
-    list.append(button);
+    row.append(button);
+
+    if (kind === 'draft') {
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'icon-button draft-delete';
+      deleteButton.type = 'button';
+      deleteButton.title = 'Delete draft';
+      deleteButton.setAttribute('aria-label', `Delete draft: ${draft.title}`);
+      deleteButton.append(createIcon('trash'));
+      deleteButton.addEventListener('click', () => deleteDraft(draft.name, draft.title).catch((error) => showMessages({ errors: [error.message] })));
+      row.append(deleteButton);
+    }
+
+    list.append(row);
   });
 }
 
@@ -245,6 +261,26 @@ async function openEntry(kind, name) {
   setSidebarOpen(false);
   state.draft = await api(`/api/${kind}s/${encodeURIComponent(name)}`);
   renderEditor();
+}
+
+async function deleteDraft(name, title) {
+  const isCurrent = state.kind === 'draft' && state.draft?.name === name;
+  const warning = isCurrent && state.dirty
+    ? '\n\n저장되지 않은 변경사항도 함께 사라집니다.'
+    : '';
+
+  if (!window.confirm(`"${title}" 초안을 삭제할까요?${warning}`)) return;
+
+  await api(`/api/drafts/${encodeURIComponent(name)}`, { method: 'DELETE' });
+
+  if (isCurrent) {
+    state.draft = null;
+    state.dirty = false;
+    renderEditor();
+  }
+
+  await refreshEntries();
+  showMessages({ changes: ['Draft deleted.'] });
 }
 
 function openNewDraftDialog() {
@@ -714,6 +750,16 @@ const lineWrapping = getStoredLineWrapping();
 function setSidebarOpen(open) {
   document.body.classList.toggle('sidebar-open', open);
   $('#sidebar-toggle').setAttribute('aria-expanded', String(open));
+}
+
+function createIcon(name) {
+  const container = document.createElement('span');
+  const iconTarget = document.createElement('span');
+
+  iconTarget.dataset.icon = name;
+  container.append(iconTarget);
+  renderIcons(container);
+  return iconTarget.firstElementChild || iconTarget;
 }
 
 markdownEditor = createMarkdownEditor({

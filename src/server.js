@@ -332,6 +332,19 @@ async function handleCreateDraft(request, response) {
   });
 }
 
+async function handleDeleteDraft(name, response) {
+  const filePath = draftPath(name);
+
+  try {
+    await fsp.unlink(filePath);
+  } catch (unlinkError) {
+    if (unlinkError.code === 'ENOENT') return error(response, 404, 'Draft file was not found.');
+    throw unlinkError;
+  }
+
+  json(response, 200, { name, message: 'Draft deleted.' });
+}
+
 async function handleSaveDraft(name, request, response) {
   const body = await readJson(request);
   const content = String(body.content || '');
@@ -596,6 +609,7 @@ async function route(request, response) {
   if (parts[0] === 'api' && parts[1] === 'drafts' && parts[2]) {
     const name = parts[2];
 
+    if (parts.length === 3 && request.method === 'DELETE') return handleDeleteDraft(name, response);
     if (parts.length === 3 && request.method === 'GET') return json(response, 200, await getDraft(name));
     if (parts.length === 4 && parts[3] === 'save' && request.method === 'POST') {
       return handleSaveDraft(name, request, response);
