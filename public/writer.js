@@ -242,11 +242,13 @@ async function openEntry(kind, name) {
   if (state.dirty && !window.confirm('저장되지 않은 변경사항이 있습니다. 이동할까요?')) return;
 
   state.kind = kind;
+  setSidebarOpen(false);
   state.draft = await api(`/api/${kind}s/${encodeURIComponent(name)}`);
   renderEditor();
 }
 
 function openNewDraftDialog() {
+  setSidebarOpen(false);
   $('#new-draft-form').reset();
   $('#new-draft-dialog').showModal();
   $('#new-title').focus();
@@ -709,6 +711,11 @@ async function init() {
 
 const lineWrapping = getStoredLineWrapping();
 
+function setSidebarOpen(open) {
+  document.body.classList.toggle('sidebar-open', open);
+  $('#sidebar-toggle').setAttribute('aria-expanded', String(open));
+}
+
 markdownEditor = createMarkdownEditor({
   parent: $('#content'),
   wrapLines: lineWrapping,
@@ -725,6 +732,11 @@ $('#line-wrapping').addEventListener('change', (event) => {
   markdownEditor.setLineWrapping(enabled);
   storeLineWrapping(enabled);
 });
+
+$('#sidebar-toggle').addEventListener('click', () => {
+  setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+});
+$('#sidebar-backdrop').addEventListener('click', () => setSidebarOpen(false));
 
 $('#new-draft').addEventListener('click', openNewDraftDialog);
 $('#new-draft-empty').addEventListener('click', openNewDraftDialog);

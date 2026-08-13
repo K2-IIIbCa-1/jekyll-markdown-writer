@@ -18,8 +18,8 @@
 * { box-sizing: border-box; }
 
 body {
-  min-width: 900px;
   min-height: 100vh;
+  overflow-x: hidden;
   margin: 0;
   color: var(--text);
   background: var(--bg);
@@ -68,6 +68,7 @@ h1,
 .top-actions,
 .editor-actions,
 .dialog-actions { display: flex; align-items: center; gap: 8px; }
+.sidebar-toggle { display: none; }
 
 .button,
 .snippet-button,
@@ -111,6 +112,8 @@ h1,
   border-right: 1px solid var(--border);
   background: #111715;
 }
+
+.sidebar-backdrop { display: none; }
 
 .section-heading { display: flex; align-items: center; justify-content: space-between; }
 .section-heading h2 { font-size: 0.9rem; }
@@ -242,4 +245,91 @@ dialog select:focus { border-color: var(--accent); }
   .top-actions { flex-wrap: wrap; justify-content: end; }
   .app-shell { grid-template-columns: 210px minmax(0, 1fr); }
   .workspace { padding-inline: 20px; }
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    display: grid;
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .top-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .top-actions > .button,
+  .top-actions > .icon-button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 5px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-toggle { display: inline-flex; }
+
+  .app-shell { display: block; min-height: calc(100vh - 76px); }
+
+  .sidebar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(86vw, 300px);
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+    box-shadow: 12px 0 36px rgba(0, 0, 0, 0.45);
+  }
+
+  .sidebar-open .sidebar { transform: translateX(0); }
+
+  .sidebar-backdrop {
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .sidebar-open .sidebar-backdrop { display: block; }
+
+  .workspace { padding: 18px 12px 28px; }
+  .empty-state { margin: 10vh auto; }
+  .editor-header { display: grid; gap: 12px; }
+  .editor-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .editor-actions > .button,
+  .editor-actions > .icon-button { width: 100%; justify-content: center; }
+  .editor-actions > #save-state { grid-column: 1 / -1; }
+  .git-panel-header { align-items: start; flex-wrap: wrap; }
+  .toolbar { gap: 4px; }
+  .toolbar-label { width: 100%; margin: 4px 0 0; }
+  .toolbar-divider { display: none; }
+  .editor-grid { grid-template-rows: auto minmax(320px, 55vh) auto; min-height: 390px; }
+  .editor-footer { align-items: flex-start; flex-wrap: wrap; padding: 7px 9px; }
+  .editor-footer-options { flex-wrap: wrap; gap: 8px; }
+
+  dialog {
+    width: min(520px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+  }
+
+  dialog form { padding: 16px; }
+  .dialog-actions { flex-wrap: wrap; }
+  .dialog-actions .button { flex: 1 1 120px; }
 }
