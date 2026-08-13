@@ -15,6 +15,9 @@
       <div class="top-actions">
         <button id="preview-toggle" class="button button-quiet" type="button">Preview: stopped</button>
         <a id="preview-link" class="button button-primary" href="#" target="_blank" rel="noreferrer">Open Jekyll</a>
+        <button id="git-status" class="button button-quiet" type="button">Git status</button>
+        <button id="git-commit" class="button button-quiet" type="button" disabled>Commit</button>
+        <button id="git-push" class="button button-quiet" type="button" disabled>Push</button>
       </div>
     </header>
 
@@ -45,6 +48,14 @@
           <button id="new-draft-empty" class="button button-primary" type="button">New draft</button>
         </div>
 
+        <div id="git-panel" class="git-panel hidden" aria-live="polite">
+          <div class="git-panel-header">
+            <strong>Git</strong>
+            <span id="git-summary" class="muted small"></span>
+          </div>
+          <div id="git-details" class="muted small"></div>
+        </div>
+
         <div id="editor-view" class="editor-view hidden">
           <div class="editor-header">
             <div>
@@ -61,7 +72,6 @@
           </div>
 
           <div id="messages" class="messages" aria-live="polite"></div>
-
           <div class="toolbar" aria-label="Markdown snippets">
             <span class="toolbar-label">Insert</span>
             <button class="snippet-button icon-tool" data-snippet="heading" type="button" title="Heading" aria-label="Insert heading"><span data-icon="heading"></span></button>

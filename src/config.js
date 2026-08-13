@@ -59,6 +59,7 @@ export function loadConfig(defaultRootDir, toolDir = path.join(defaultRootDir, '
     jekyllCommand: process.env.JEKYLL_COMMAND || (process.platform === 'win32' ? 'bundle.bat' : 'bundle'),
     jekyllPort,
     jekyllUrl: process.env.JEKYLL_PREVIEW_URL || `http://127.0.0.1:${jekyllPort}`,
+    gitEnabled: process.env.JEKYLL_GIT_ENABLED !== 'false',
     excludedPostDirectories,
     mediaDirectory: (process.env.JEKYLL_MEDIA_DIRECTORY || 'images').replace(/^\/+|\/+$/g, '') || 'images',
     postUrlPrefix: `/${(process.env.JEKYLL_POST_URL_PREFIX || '/posts').replace(/^\/+|\/+$/g, '') || 'posts'}`,

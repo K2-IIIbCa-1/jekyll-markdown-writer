@@ -21,7 +21,6 @@ let markdownEditor;
 let imageUploadAlignment = 'default';
 const LINE_WRAPPING_STORAGE_KEY = 'jekyll-writer.line-wrapping';
 const AI_SETTINGS_STORAGE_KEY = 'jekyll-writer.ai-settings';
-
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -47,6 +46,53 @@ function showMessages({ errors = [], warnings = [], changes = [] } = {}) {
     element.textContent = message;
     container.append(element);
   });
+}
+
+function renderGitStatus(status) {
+  const panel = $('#git-panel');
+  const details = $('#git-details');
+  const summary = $('#git-summary');
+  const commit = $('#git-commit');
+  const push = $('#git-push');
+
+  panel.classList.remove('hidden');
+  summary.textContent = status.configured ? `${status.branch || 'detached'} · ${status.remote || 'no origin'}` : 'not configured';
+  details.textContent = status.configured
+    ? `${status.message}\n${status.entries.length ? status.entries.map((entry) => entry.summary).join('\n') : 'working tree clean'}`
+    : status.message;
+  commit.disabled = !status.canCommit;
+  push.disabled = !status.canPush;
+}
+
+async function refreshGitStatus({ show = true } = {}) {
+  const status = await api('/api/git/status');
+  if (show) renderGitStatus(status);
+  return status;
+}
+
+async function commitGit() {
+  const status = await refreshGitStatus();
+  if (!status.canCommit) return;
+
+  const message = window.prompt('커밋 메시지를 입력하세요.', 'feat(post): publish article');
+  if (!message?.trim()) return;
+
+  const result = await api('/api/git/commit', {
+    method: 'POST',
+    body: JSON.stringify({ message })
+  });
+  renderGitStatus(result.status);
+  showMessages({ changes: [result.message] });
+}
+
+async function pushGit() {
+  const status = await refreshGitStatus();
+  if (!status.canPush) return;
+  if (!window.confirm(`현재 브랜치 ${status.branch || '(detached)'}를 origin으로 Push할까요?`)) return;
+
+  const result = await api('/api/git/push', { method: 'POST' });
+  renderGitStatus(result.status);
+  showMessages({ changes: [result.message] });
 }
 
 function setSaveState(message, dirty = state.dirty) {
@@ -652,6 +698,11 @@ async function init() {
   $('#front-image-upload-control').classList.toggle('disabled', !config.r2Configured);
   $('#front-image-upload').disabled = !config.r2Configured;
   initializeAiSettings(config);
+  try {
+    await refreshGitStatus();
+  } catch (error) {
+    showMessages({ warnings: [`Git 상태를 읽을 수 없습니다: ${error.message}`] });
+  }
   renderPreviewState(preview);
   await refreshEntries();
 }
@@ -714,6 +765,9 @@ $('#save-draft').addEventListener('click', () => saveEntry().catch((error) => sh
 $('#validate-draft').addEventListener('click', () => validateEntry().catch((error) => showMessages({ errors: [error.message] })));
 $('#publish-draft').addEventListener('click', () => publishDraft().catch((error) => showMessages({ errors: [error.message] })));
 $('#preview-toggle').addEventListener('click', () => togglePreview().catch((error) => showMessages({ errors: [error.message] })));
+$('#git-status').addEventListener('click', () => refreshGitStatus().catch((error) => showMessages({ errors: [error.message] })));
+$('#git-commit').addEventListener('click', () => commitGit().catch((error) => showMessages({ errors: [error.message] })));
+$('#git-push').addEventListener('click', () => pushGit().catch((error) => showMessages({ errors: [error.message] })));
 $('#image-upload').addEventListener('change', (event) => uploadImages(event));
 $('#front-image-upload').addEventListener('change', (event) => uploadPreviewImage(event));
 $$('.snippet-button[data-snippet]').forEach((button) => button.addEventListener('click', () => insertText(SNIPPETS[button.dataset.snippet])));

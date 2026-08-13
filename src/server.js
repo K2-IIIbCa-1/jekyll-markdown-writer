@@ -18,11 +18,13 @@ import {
   validateContent
 } from './core.js';
 import { generateDescription } from './ai.js';
+import { commitPosts, getGitStatus, pushRepository } from './git.js';
 import { objectExists, uploadObject } from './r2.js';
 
 const toolDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = loadConfig(path.resolve(toolDir, '../..'), toolDir);
 const rootDir = config.rootDir;
+const editorGitPath = path.relative(rootDir, toolDir);
 let previewProcess;
 
 const MIME_TYPES = {
@@ -445,6 +447,28 @@ async function handleAiDescription(request, response) {
   return json(response, 200, { description });
 }
 
+async function handleGitCommit(request, response) {
+  const body = await readJson(request, 16 * 1024);
+  return json(response, 200, await commitPosts({
+    rootDir,
+    postsDir: config.postsDir,
+    excludedPostDirectories: config.excludedPostDirectories,
+    ignoredGitPaths: [editorGitPath],
+    message: body.message,
+    enabled: config.gitEnabled
+  }));
+}
+
+async function handleGitPush(response) {
+  return json(response, 200, await pushRepository({
+    rootDir,
+    postsDir: config.postsDir,
+    excludedPostDirectories: config.excludedPostDirectories,
+    ignoredGitPaths: [editorGitPath],
+    enabled: config.gitEnabled
+  }));
+}
+
 async function handlePublishDraft(name, request, response) {
   const body = await readJson(request);
   const draft = await getDraft(name);
@@ -525,6 +549,24 @@ async function route(request, response) {
 
   if (url.pathname === '/api/ai/description' && request.method === 'POST') {
     return handleAiDescription(request, response);
+  }
+
+  if (url.pathname === '/api/git/status' && request.method === 'GET') {
+    return json(response, 200, await getGitStatus({
+      rootDir,
+      postsDir: config.postsDir,
+      excludedPostDirectories: config.excludedPostDirectories,
+      ignoredGitPaths: [editorGitPath],
+      enabled: config.gitEnabled
+    }));
+  }
+
+  if (url.pathname === '/api/git/commit' && request.method === 'POST') {
+    return handleGitCommit(request, response);
+  }
+
+  if (url.pathname === '/api/git/push' && request.method === 'POST') {
+    return handleGitPush(response);
   }
 
   if (url.pathname === '/api/drafts' && request.method === 'GET') {
@@ -622,7 +664,7 @@ async function serveStatic(requestPath, response) {
 const server = http.createServer((request, response) => {
   route(request, response).catch((requestError) => {
     console.error(requestError);
-    error(response, 500, requestError.message || '처리 중 오류가 발생했습니다.');
+    error(response, requestError.statusCode || 500, requestError.message || '처리 중 오류가 발생했습니다.');
   });
 });
 

@@ -151,6 +151,10 @@ code { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Consolas
 .message { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface); font-size: 0.78rem; }
 .message.warning { border-left-color: var(--warning); }
 .message.error { border-left-color: var(--danger); }
+.git-panel { display: grid; gap: 6px; margin: 12px 0; padding: 9px 10px; border: 1px solid var(--border); background: var(--surface); font-size: 0.78rem; }
+.git-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.git-panel strong { color: var(--accent); font: 0.74rem ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; }
+.git-details { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 16px 0 10px; }
 .toolbar-label { margin-right: 4px; color: var(--muted); font: 0.7rem ui-monospace, SFMono-Regular, Consolas, monospace; text-transform: uppercase; }
