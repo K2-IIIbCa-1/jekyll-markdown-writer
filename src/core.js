@@ -228,6 +228,25 @@ export function validateContent(content, { draft = true } = {}) {
   };
 }
 
+export function extractDescriptionSource(content, limit = 12000) {
+  const parsed = parseFrontMatter(content);
+  const source = parsed.valid ? parsed.body : String(content);
+
+  return source
+    .replace(/```[\s\S]*?```/gu, ' ')
+    .replace(/~~~[\s\S]*?~~~/gu, ' ')
+    .replace(/\{%[\s\S]*?%\}/gu, ' ')
+    .replace(/\{\{[\s\S]*?\}\}/gu, ' ')
+    .replace(/!\[([^\]]*)\]\([^)]*\)/gu, ' $1 ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/gu, ' $1 ')
+    .replace(/<[^>]+>/gu, ' ')
+    .replace(/[ \t]+\n/gu, '\n')
+    .replace(/\n[ \t]+/gu, '\n')
+    .replace(/\n{3,}/gu, '\n\n')
+    .trim()
+    .slice(0, limit);
+}
+
 export function safeDraftName(name) {
   const value = path.basename(String(name || ''));
 

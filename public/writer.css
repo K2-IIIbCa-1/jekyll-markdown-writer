@@ -108,7 +108,7 @@ h2 { font-size: 1.1rem; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; }
 .section-heading h2 { font-size: 0.9rem; }
 .list-section-heading { margin-top: 24px; }
-.icon-button { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; font-size: 1.1rem; line-height: 1; }
+.icon-button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; font-size: 1.1rem; line-height: 1; }
 .muted { color: var(--muted); }
 .small { font-size: 0.74rem; }
 .sidebar > .small { margin-top: 8px; }
@@ -208,6 +208,13 @@ dialog select:focus { border-color: var(--accent); }
 .dialog-check { display: inline-flex; align-items: center; gap: 8px; margin-top: 7px; cursor: pointer; }
 .dialog-check input { width: 14px; min-height: 14px; margin: 0; padding: 0; accent-color: var(--accent); }
 .dialog-options { display: grid; gap: 2px; margin-top: 4px; }
+.ai-description-settings { margin: 4px 0 2px; border: 1px solid var(--border); background: #0e1411; }
+.ai-description-settings summary { padding: 8px 10px; color: var(--accent); cursor: pointer; font: 0.74rem ui-monospace, SFMono-Regular, Consolas, monospace; }
+.ai-description-fields { display: grid; gap: 8px; padding: 0 10px 10px; }
+.ai-description-action { justify-self: start; }
+.ai-description-fields .button { justify-self: start; }
+.ai-description-status.error { color: var(--danger); }
+.ai-description-status.success { color: var(--accent); }
 .dialog-inline { display: flex; align-items: stretch; gap: 6px; }
 .dialog-inline > input { flex: 1; min-width: 0; }
 .dialog-inline > label { margin-top: 0; }

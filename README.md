@@ -18,6 +18,7 @@ Jekyll 저장소에서 글을 작성하고 `_drafts/`, `_posts/`를 관리하는
 - 선택 영역 굵게·기울임·취소선 토글 및 테마 색상/배경 강조 팔레트
 - Tip·Info·Warning·Danger 프롬프트 프리셋
 - 게시글 설정창에서 description·categories·tags·대표 이미지·옵션 front matter 수정
+- AI provider·API key·model을 입력해 description 초안 자동 생성
 - front matter와 일부 문법 검사
 - Jekyll 미리보기 실행 및 링크
 - Cloudflare R2 토큰 연결을 통한 빠른 이미지 업로드
@@ -70,6 +71,19 @@ BLOG_WRITER_PORT=4170
 - `JEKYLL_COMMAND`: 비워두면 Windows는 `bundle.bat`, 그 외 환경은 `bundle`을 사용
 </details>
 
+### AI description 설정
+
+AI 설정은 `.env`에 기본값으로 넣어둘 수 있습니다.
+
+```text
+AI_PROVIDER=openai
+AI_MODEL=
+AI_API_KEY=
+AI_ENDPOINT=
+```
+
+`AI_API_KEY`가 있으면 편집기의 AI description 설정에서 API key를 비워도 해당 키가 사용됩니다. provider·model·endpoint는 브라우저의 로컬 설정에 자동으로 기억되며, API key는 기본적으로 저장하지 않습니다. 개인 컴퓨터에서만 키를 기억하려면 설정창의 `Remember API key on this computer`를 선택할 수 있지만, 브라우저 local storage에 평문으로 저장되므로 공유 컴퓨터에서는 사용하지 마세요. `.env`와 local storage 모두 Git에 커밋하지 않는 것을 권장합니다.
+
 ### Cloudflare R2 이미지 업로드
 
 R2를 사용하지 않으면 아래 항목을 비워둡니다.
@@ -107,6 +121,27 @@ images/YYYY-MM-DD_HHMMSS/screenshot.png
 7. `Publish`는 초안에 현재 시각을 `date`로 기록하고 `_posts/`로 이동합니다.
 
 `Code block`은 언어, 파일명, `nolineno`(줄 번호 숨김)를 선택해 fenced code block을 삽입합니다. `Media embed`는 현재 테마의 `_includes/embed/` 문법을 사용하므로 YouTube·오디오·비디오 URL을 넣어야 합니다. 오디오·비디오는 아직 파일 업로드 대상이 아니며 외부 URL을 삽입합니다. `Post settings`는 시스템 필드(date·post_id·media_subpath)를 제외한 주요 front matter와 홈/SEO용 `image.path`, `image.alt`를 수정합니다. R2가 설정되어 있으면 대표 이미지도 설정창에서 업로드할 수 있습니다. Liquid를 끄면 Liquid include도 렌더링되지 않으므로 미디어 문법을 사용할 때는 활성화 상태를 유지하세요.
+`AI description settings`에서 provider·API key·model을 설정한 뒤, 설정창 바깥의 `Auto generate` 버튼으로 본문 설명을 생성합니다. 결과는 Description 입력란에만 채워지며 `Apply`를 눌러야 저장됩니다. API key는 `.env`에서 읽거나 현재 에디터 세션에 임시로 입력할 수 있고, 선택한 경우에만 브라우저에 기억됩니다. 본문 일부가 선택한 외부 provider로 전송되므로 민감한 내용은 제외하고 사용하세요.
+
+Google Gemini 3.5 Flash-Lite를 사용하려면 다음처럼 입력합니다.
+
+```text
+Provider: Google Gemini
+Model: gemini-3.5-flash-lite
+Endpoint: 입력하지 않음
+API key: Google AI Studio에서 발급한 Gemini API key
+```
+
+또는 `.env`에 아래처럼 저장하면 편집기에서 API key를 다시 입력하지 않아도 됩니다.
+
+```text
+AI_PROVIDER=gemini
+AI_MODEL=gemini-3.5-flash-lite
+AI_API_KEY=your-gemini-api-key
+AI_ENDPOINT=
+```
+
+Google Gemini의 공식 모델 ID는 `gemini-3.5-flash-lite`이며, 이 도구는 Gemini의 `generateContent` API를 사용합니다. `Endpoint`는 Gemini 선택 시 비워두세요. [Gemini 모델 목록](https://ai.google.dev/gemini-api/docs/models)과 [Gemini 3.5 Flash-Lite 안내](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)에서 현재 모델 ID와 상태를 확인할 수 있습니다.
 
 왼쪽 `Posts` 목록에서 기존 글을 열어 수정할 수 있습니다. 기존 글은 `Save changes`로 저장합니다.
 

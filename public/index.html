@@ -55,6 +55,7 @@
               <span id="save-state" class="muted small">저장되지 않음</span>
               <button id="save-draft" class="button button-quiet" type="button">Save</button>
               <button id="validate-draft" class="button button-quiet" type="button">Validate</button>
+              <button class="icon-button" data-action="front-matter" type="button" title="Post settings" aria-label="Post settings"><span data-icon="settings"></span></button>
               <button id="publish-draft" class="button button-primary" type="button">Publish</button>
             </div>
           </div>
@@ -124,7 +125,6 @@
                 <button class="image-align-button" data-image-align="right" type="button" title="Uploaded image: float right" aria-label="Uploaded image: float right" aria-pressed="false"><span data-icon="alignRight"></span></button>
               </div>
             </div>
-            <button class="snippet-button icon-tool" data-action="front-matter" type="button" title="Post settings" aria-label="Post settings"><span data-icon="settings"></span></button>
           </div>
 
           <div class="editor-grid">
@@ -200,7 +200,7 @@
             <p class="eyebrow">MEDIA EMBED</p>
             <h2>Insert media</h2>
           </div>
-          <button class="icon-button dialog-close" value="cancel" type="submit" title="Close" aria-label="Close"><span data-icon="close"></span></button>
+          <button class="icon-button dialog-close" value="cancel" type="submit" formnovalidate title="Close" aria-label="Close"><span data-icon="close"></span></button>
         </div>
         <label for="media-type">Type</label>
         <select id="media-type" name="type">
@@ -218,7 +218,7 @@
           <label class="dialog-check"><input id="media-muted" type="checkbox"><span>Muted</span></label>
         </div>
         <div class="dialog-actions">
-          <button class="button button-quiet" value="cancel" type="submit">Cancel</button>
+          <button class="button button-quiet" value="cancel" type="submit" formnovalidate>Cancel</button>
           <button class="button button-primary" id="insert-media" value="default" type="submit">Insert</button>
         </div>
       </form>
@@ -235,6 +235,29 @@
         </div>
         <label for="front-description">Description</label>
         <input id="front-description" name="description" maxlength="240">
+        <button id="generate-description" class="button button-quiet ai-description-action" type="button">Auto generate</button>
+        <details class="ai-description-settings">
+          <summary>AI description settings</summary>
+          <div class="ai-description-fields">
+            <label for="ai-provider">Provider</label>
+            <select id="ai-provider" name="provider">
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="compatible">OpenAI-compatible</option>
+            </select>
+            <label for="ai-api-key">API key <span class="muted small">(.env or temporary)</span></label>
+            <input id="ai-api-key" name="apiKey" type="password" autocomplete="off" placeholder="Leave blank to use .env">
+            <label class="dialog-check"><input id="ai-remember-key" type="checkbox"><span>Remember API key on this computer <span class="muted small">(local storage)</span></span></label>
+            <label for="ai-model">Model</label>
+            <input id="ai-model" name="model" placeholder="e.g. gpt-4o-mini">
+            <label id="ai-endpoint-label" class="hidden" for="ai-endpoint">Endpoint</label>
+            <input id="ai-endpoint" class="hidden" name="endpoint" type="url" placeholder="https://.../v1/chat/completions">
+            <p id="ai-env-status" class="muted small"></p>
+            <p id="ai-description-status" class="muted small" aria-live="polite"></p>
+            <p class="muted small">Selected body text is sent to the provider. Code blocks, Liquid, and image URLs are removed first.</p>
+          </div>
+        </details>
         <label for="front-categories">Categories <span class="muted small">(comma separated)</span></label>
         <input id="front-categories" name="categories" placeholder="dev, web">
         <label for="front-tags">Tags <span class="muted small">(comma separated)</span></label>

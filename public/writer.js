@@ -6,12 +6,21 @@ const state = {
   kind: 'draft',
   drafts: [],
   posts: [],
-  dirty: false
+  dirty: false,
+  ai: {
+    provider: 'openai',
+    model: '',
+    endpoint: '',
+    apiKey: '',
+    rememberApiKey: false
+  },
+  aiConfigured: false
 };
 
 let markdownEditor;
 let imageUploadAlignment = 'default';
 const LINE_WRAPPING_STORAGE_KEY = 'jekyll-writer.line-wrapping';
+const AI_SETTINGS_STORAGE_KEY = 'jekyll-writer.ai-settings';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -65,6 +74,63 @@ function storeLineWrapping(enabled) {
   } catch {
     // Ignore storage restrictions; the editor still changes for this session.
   }
+}
+
+function readAiSettings() {
+  try {
+    const value = JSON.parse(localStorage.getItem(AI_SETTINGS_STORAGE_KEY) || '{}');
+    return value && typeof value === 'object' ? value : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAiSettings() {
+  const settings = {
+    provider: $('#ai-provider').value,
+    model: $('#ai-model').value.trim(),
+    endpoint: $('#ai-endpoint').value.trim(),
+    rememberApiKey: $('#ai-remember-key').checked
+  };
+
+  state.ai = {
+    ...settings,
+    apiKey: $('#ai-api-key').value
+  };
+
+  try {
+    const stored = settings.rememberApiKey && state.ai.apiKey
+      ? { ...settings, apiKey: state.ai.apiKey }
+      : settings;
+    localStorage.setItem(AI_SETTINGS_STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Ignore storage restrictions; the current editor session still works.
+  }
+}
+
+function initializeAiSettings(config) {
+  const stored = readAiSettings();
+  const rememberApiKey = stored.rememberApiKey === true;
+
+  state.aiConfigured = config.aiConfigured === true;
+  state.ai = {
+    provider: stored.provider || config.aiProvider || 'openai',
+    model: stored.model || config.aiModel || '',
+    endpoint: stored.endpoint || config.aiEndpoint || '',
+    apiKey: rememberApiKey ? String(stored.apiKey || '') : '',
+    rememberApiKey
+  };
+
+  $('#ai-provider').value = state.ai.provider;
+  $('#ai-model').value = state.ai.model;
+  $('#ai-endpoint').value = state.ai.endpoint;
+  $('#ai-api-key').value = state.ai.apiKey;
+  $('#ai-remember-key').checked = state.ai.rememberApiKey;
+  $('#ai-env-status').textContent = state.aiConfigured
+    ? 'API key from .env will be used when this field is blank.'
+    : 'No AI_API_KEY found in .env. Enter a key or configure one before generating.';
+  $('#ai-description-status').textContent = '';
+  $('#ai-description-status').className = 'muted small';
 }
 
 function renderEntryList(selector, entries, emptyText, kind) {
@@ -414,13 +480,63 @@ function openFrontMatterDialog() {
   $('#front-image-path').value = image.path || '';
   $('#front-image-alt').value = image.alt || '';
   $('#front-image-no-bg').checked = image.no_bg === true;
+  $('#ai-provider').value = state.ai.provider;
+  $('#ai-model').value = state.ai.model;
+  $('#ai-endpoint').value = state.ai.endpoint;
+  $('#ai-api-key').value = state.ai.apiKey;
+  $('#ai-remember-key').checked = state.ai.rememberApiKey;
   $('#front-pin').checked = values.pin === true;
   $('#front-toc').checked = values.toc !== false;
   $('#front-comments').checked = values.comments !== false;
   $('#front-math').checked = values.math === true;
   $('#front-mermaid').checked = values.mermaid === true;
   $('#front-liquid').checked = values.render_with_liquid === false;
+  updateAiProviderFields();
   openDialog('front-matter-dialog');
+}
+
+function updateAiProviderFields() {
+  const compatible = $('#ai-provider').value === 'compatible';
+  $('#ai-endpoint-label').classList.toggle('hidden', !compatible);
+  $('#ai-endpoint').classList.toggle('hidden', !compatible);
+}
+
+function setAiDescriptionStatus(message, type = '') {
+  const status = $('#ai-description-status');
+  status.textContent = message;
+  status.className = `muted small ai-description-status${type ? ` ${type}` : ''}`;
+}
+
+async function generateDescription() {
+  if (!state.draft) return;
+
+  const button = $('#generate-description');
+  button.disabled = true;
+  button.textContent = 'Generating...';
+  setAiDescriptionStatus('Generating...');
+
+  try {
+    const result = await api('/api/ai/description', {
+      method: 'POST',
+      body: JSON.stringify({
+        provider: $('#ai-provider').value,
+        apiKey: $('#ai-api-key').value,
+        model: $('#ai-model').value,
+        endpoint: $('#ai-endpoint').value,
+        content: markdownEditor.getValue()
+      })
+    });
+    $('#front-description').value = result.description;
+    setAiDescriptionStatus('Description generated. Review it before applying.', 'success');
+    showMessages({ changes: ['Description generated. Review it before applying.'] });
+  } catch (error) {
+    setAiDescriptionStatus(error.message, 'error');
+    showMessages({ errors: [error.message] });
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Auto generate';
+    saveAiSettings();
+  }
 }
 
 function applyFrontMatter(event) {
@@ -450,6 +566,7 @@ function applyFrontMatter(event) {
   if (updates.render_with_liquid === false && /\{%\s*include\s+embed\//iu.test(markdownEditor.getValue())) {
     showMessages({ warnings: ['Liquid 렌더링을 끄면 미디어 임베드도 표시되지 않습니다.'] });
   }
+  saveAiSettings();
   $('#front-matter-dialog').close();
 }
 
@@ -534,6 +651,7 @@ async function init() {
   $('#front-image-upload-control').title = config.r2Configured ? 'Upload preview image' : 'Configure R2 to upload preview images';
   $('#front-image-upload-control').classList.toggle('disabled', !config.r2Configured);
   $('#front-image-upload').disabled = !config.r2Configured;
+  initializeAiSettings(config);
   renderPreviewState(preview);
   await refreshEntries();
 }
@@ -567,6 +685,19 @@ $('#new-draft-form').addEventListener('submit', (event) => {
 $('#code-form').addEventListener('submit', insertCodeBlock);
 $('#media-form').addEventListener('submit', insertMedia);
 $('#front-matter-form').addEventListener('submit', applyFrontMatter);
+$('#ai-provider').addEventListener('change', () => {
+  updateAiProviderFields();
+  saveAiSettings();
+});
+$('#ai-model').addEventListener('input', saveAiSettings);
+$('#ai-endpoint').addEventListener('input', saveAiSettings);
+$('#ai-api-key').addEventListener('input', () => {
+  if ($('#ai-remember-key').checked) saveAiSettings();
+});
+$('#ai-remember-key').addEventListener('change', () => {
+  saveAiSettings();
+});
+$('#generate-description').addEventListener('click', () => generateDescription());
 $('#media-type').addEventListener('change', updateMediaDialog);
 $$('[data-action="code-block"]').forEach((button) => button.addEventListener('click', () => {
   $('#code-form').reset();

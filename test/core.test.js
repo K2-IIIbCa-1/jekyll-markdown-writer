@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   normalizeContent,
   parseFrontMatter,
+  extractDescriptionSource,
   safeFileName,
   safePostName,
   safeSubpath,
@@ -88,4 +89,10 @@ test('warns when Liquid syntax is disabled in front matter', () => {
   const result = validateContent('---\ntitle: Test\nrender_with_liquid: false\n---\n\n{% include embed/youtube.html id="video" %}\n');
 
   assert.ok(result.warnings.includes('Liquid syntax is present while render_with_liquid is false.'));
+});
+
+test('extracts readable description source without code or Liquid blocks', () => {
+  const source = '---\ntitle: Test\n---\n\n본문 문장입니다.\n\n```js\nconst secret = true;\n```\n\n{% include embed/video.html src="video.mp4" %}\n\n![설명](cover.png)\n';
+
+  assert.equal(extractDescriptionSource(source), '본문 문장입니다.\n\n설명');
 });

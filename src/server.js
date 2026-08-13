@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfig } from './config.js';
 import {
   parseFrontMatter,
+  extractDescriptionSource,
   safePostName,
   safeDraftName,
   safeFileName,
@@ -16,6 +17,7 @@ import {
   timestamp,
   validateContent
 } from './core.js';
+import { generateDescription } from './ai.js';
 import { objectExists, uploadObject } from './r2.js';
 
 const toolDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -423,6 +425,26 @@ async function handleUpload(kind, name, request, response) {
   });
 }
 
+async function handleAiDescription(request, response) {
+  const body = await readJson(request);
+  const content = String(body.content || '');
+  const parsed = parseFrontMatter(content);
+  const source = extractDescriptionSource(content);
+
+  if (!source) return error(response, 400, '본문에서 설명을 만들 수 있는 텍스트를 찾지 못했습니다.');
+
+  const description = await generateDescription({
+    provider: String(body.provider || config.aiProvider),
+    apiKey: String(body.apiKey || config.aiApiKey),
+    model: String(body.model || config.aiModel),
+    endpoint: String(body.endpoint || config.aiEndpoint),
+    title: String(body.title || parsed.values.title || '').slice(0, 240),
+    source
+  });
+
+  return json(response, 200, { description });
+}
+
 async function handlePublishDraft(name, request, response) {
   const body = await readJson(request);
   const draft = await getDraft(name);
@@ -492,9 +514,17 @@ async function route(request, response) {
       appName: config.appName,
       siteName: config.siteName,
       jekyllUrl: config.jekyllUrl,
+      aiConfigured: config.aiConfigured,
+      aiProvider: config.aiProvider,
+      aiModel: config.aiModel,
+      aiEndpoint: config.aiEndpoint,
       r2Configured: config.r2Configured,
       r2PublicBaseUrl: config.r2.publicBaseUrl
     });
+  }
+
+  if (url.pathname === '/api/ai/description' && request.method === 'POST') {
+    return handleAiDescription(request, response);
   }
 
   if (url.pathname === '/api/drafts' && request.method === 'GET') {

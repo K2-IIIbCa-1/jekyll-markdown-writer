@@ -43,6 +43,10 @@ export function loadConfig(defaultRootDir, toolDir = path.join(defaultRootDir, '
     .split(',')
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
+  const aiApiKey = String(process.env.AI_API_KEY || '').trim();
+  const aiProvider = String(process.env.AI_PROVIDER || 'openai').trim() || 'openai';
+  const aiModel = String(process.env.AI_MODEL || '').trim();
+  const aiEndpoint = String(process.env.AI_ENDPOINT || '').trim();
 
   return {
     rootDir,
@@ -60,6 +64,11 @@ export function loadConfig(defaultRootDir, toolDir = path.join(defaultRootDir, '
     postUrlPrefix: `/${(process.env.JEKYLL_POST_URL_PREFIX || '/posts').replace(/^\/+|\/+$/g, '') || 'posts'}`,
     defaultToc: process.env.JEKYLL_DEFAULT_TOC !== 'false',
     defaultComments: process.env.JEKYLL_DEFAULT_COMMENTS !== 'false',
+    aiConfigured: Boolean(aiApiKey),
+    aiProvider,
+    aiModel,
+    aiEndpoint,
+    aiApiKey,
     r2Configured: Boolean(accountId && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET && endpoint && process.env.R2_PUBLIC_BASE_URL),
     r2: {
       accountId,
