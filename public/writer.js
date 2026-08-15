@@ -674,7 +674,10 @@ async function uploadImages(event) {
         state.draft.content = result.content;
         markdownEditor.setValue(result.content);
       }
-      insertText(`${result.markdown}${IMAGE_ALIGNMENTS[imageUploadAlignment] || ''}\n`);
+      const alignment = result.mediaType === 'image'
+        ? IMAGE_ALIGNMENTS[imageUploadAlignment] || ''
+        : '';
+      insertText(`${result.markdown}${alignment}\n`);
       showMessages({ changes: [`업로드 완료: ${result.key}`] });
     } catch (uploadError) {
       showMessages({ errors: [uploadError.message] });
@@ -730,7 +733,7 @@ async function init() {
   $('#r2-status').classList.toggle('ready', config.r2Configured);
   $('#r2-status').classList.toggle('error', !config.r2Configured);
   $('#image-upload').disabled = !config.r2Configured;
-  $('#upload-image-control').title = config.r2Configured ? 'Upload image' : 'Configure R2 to upload images';
+  $('#upload-image-control').title = config.r2Configured ? 'Upload image or video' : 'Configure R2 to upload media';
   $('#upload-image-control').classList.toggle('disabled', !config.r2Configured);
   $('#front-image-upload-control').title = config.r2Configured ? 'Upload preview image' : 'Configure R2 to upload preview images';
   $('#front-image-upload-control').classList.toggle('disabled', !config.r2Configured);

@@ -81,6 +81,8 @@ R2_PUBLIC_BASE_URL=
 R2_JURISDICTION=default
 ```
 
+`Upload image or video` accepts images and common video files. Images are inserted as Markdown; videos are inserted with the Jekyll `embed/video.html` include. Each file is limited to 20 MB, and multiple files are uploaded sequentially.
+
 이미지는 다음처럼 저장됩니다.
 
 ```text

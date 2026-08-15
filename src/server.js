@@ -34,7 +34,16 @@ const MIME_TYPES = {
   '.jpg': 'image/jpeg',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
-  '.webp': 'image/webp'
+  '.webp': 'image/webp',
+  '.3g2': 'video/3gpp2',
+  '.3gp': 'video/3gpp',
+  '.avi': 'video/x-msvideo',
+  '.m4v': 'video/x-m4v',
+  '.mkv': 'video/x-matroska',
+  '.mov': 'video/quicktime',
+  '.mp4': 'video/mp4',
+  '.ogv': 'video/ogg',
+  '.webm': 'video/webm'
 };
 
 function json(response, status, value) {
@@ -413,10 +422,12 @@ async function handleUpload(kind, name, request, response) {
   const entry = kind === 'post' ? await getPost(name) : await getDraft(name);
   const subpath = safeSubpath(entry.values.media_subpath, config.mediaDirectory);
   const fileName = safeFileName(body.fileName, 'image');
-  const contentType = String(body.contentType || MIME_TYPES[path.extname(fileName).toLowerCase()] || '');
+  const extensionContentType = MIME_TYPES[path.extname(fileName).toLowerCase()];
+  const contentType = String(extensionContentType || body.contentType || '');
+  const mediaType = contentType.startsWith('video/') ? 'video' : contentType.startsWith('image/') ? 'image' : '';
 
-  if (!contentType.startsWith('image/')) {
-    return error(response, 400, '이미지 파일만 업로드할 수 있습니다.');
+  if (!mediaType) {
+    return error(response, 400, '이미지 또는 영상 파일만 업로드할 수 있습니다.');
   }
 
   if (typeof body.data !== 'string' || !body.data) {
@@ -427,16 +438,21 @@ async function handleUpload(kind, name, request, response) {
   const file = Buffer.from(base64, 'base64');
 
   if (!file.length || file.length > 20 * 1024 * 1024) {
-    return error(response, 400, '이미지 크기는 20MB 이하이어야 합니다.');
+    return error(response, 400, '파일 크기는 20MB 이하이어야 합니다.');
   }
 
   const baseKey = `${subpath}/${fileName}`;
   const key = await nextObjectKey(config.r2, baseKey);
   const uploaded = await uploadObject(config.r2, { key, body: file, contentType });
+  const relativeSource = path.basename(key);
+  const markdown = mediaType === 'video'
+    ? `{% include embed/video.html src="${relativeSource}" %}`
+    : `![${path.basename(fileName, path.extname(fileName))}](${relativeSource})`;
 
   json(response, 201, {
     ...uploaded,
-    markdown: `![${path.basename(fileName, path.extname(fileName))}](${path.basename(key)})`
+    mediaType,
+    markdown
   });
 }
 
