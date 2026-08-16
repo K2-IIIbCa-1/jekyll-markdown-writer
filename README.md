@@ -91,6 +91,10 @@ images/YYYY-MM-DD_HHMMSS/파일명.ext
 
 R2 비밀값은 `.env`에만 저장하고 Git에 커밋하지 마세요.
 
+### Stable post URLs
+
+New posts receive a stable `post_id` and `permalink` such as `/posts/2026-08-15_032609/`. Changing the title does not change the published URL.
+
 ### AI description
 
 `Post settings`에서 provider·model·API key를 설정한 뒤 `Auto generate`를 누릅니다. API key는 `.env`에 저장할 수도 있습니다.

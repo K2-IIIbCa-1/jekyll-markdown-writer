@@ -144,12 +144,23 @@ tags: ${yamlList(tags)}
 toc: ${config.defaultToc}
 comments: ${config.defaultComments}
 media_subpath: /${mediaSubpath}
+permalink: ${stablePermalink(postId)}
 ---
 
 ## 개요
 
 내용을 작성하세요.
 `;
+}
+
+function stablePermalink(postId) {
+  return `${config.postUrlPrefix}/${encodeURIComponent(String(postId || '').trim())}/`;
+}
+
+function ensureStablePermalink(content, postId) {
+  const parsed = parseFrontMatter(content);
+  if (!parsed.valid || !postId || parsed.values.permalink) return content;
+  return setFrontMatterValue(content, 'permalink', stablePermalink(postId));
 }
 
 async function postIdTaken(postId) {
@@ -210,6 +221,9 @@ function uniquePostName(directory, date, title, postId) {
 }
 
 function previewPath(values, draftName) {
+  const permalink = String(values.permalink || '').trim();
+  if (permalink.startsWith('/')) return permalink.endsWith('/') ? permalink : `${permalink}/`;
+
   const titleSlug = slugify(values.title);
   const fileSlug = slugify(path.basename(draftName, '.md'));
   const slug = titleSlug || fileSlug || values.post_id;
@@ -358,7 +372,9 @@ async function handleSaveDraft(name, request, response) {
   const body = await readJson(request);
   const content = String(body.content || '');
   const validation = validateContent(content, { draft: true });
-  const nextContent = validation.content || content;
+  const normalizedContent = validation.content || content;
+  const postId = parseFrontMatter(normalizedContent).values.post_id;
+  const nextContent = ensureStablePermalink(normalizedContent, postId);
 
   await writeAtomic(draftPath(name), nextContent);
 
@@ -373,7 +389,9 @@ async function handleSavePost(name, request, response) {
   const body = await readJson(request);
   const content = String(body.content || '');
   const validation = validateContent(content, { draft: false });
-  const nextContent = validation.content || content;
+  const normalizedContent = validation.content || content;
+  const postId = parseFrontMatter(normalizedContent).values.post_id;
+  const nextContent = ensureStablePermalink(normalizedContent, postId);
 
   if (!validation.valid) return json(response, 422, validation);
 
@@ -513,6 +531,8 @@ async function handlePublishDraft(name, request, response) {
   const postId = values.post_id || now.postId;
   content = setFrontMatterValue(content, 'post_id', postId);
   content = setFrontMatterValue(content, 'media_subpath', values.media_subpath || `/${config.mediaDirectory}/${postId}`);
+  values = parseFrontMatter(content).values;
+  content = setFrontMatterValue(content, 'permalink', values.permalink || stablePermalink(postId));
   values = parseFrontMatter(content).values;
   const postName = uniquePostName(config.postsDir, now.date, values.title, postId);
   const postPath = path.join(config.postsDir, postName);

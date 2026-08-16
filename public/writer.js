@@ -772,7 +772,7 @@ markdownEditor = createMarkdownEditor({
     setSaveState('변경됨', true);
     updateWordCount();
   },
-  onSave: () => saveEntry().catch((error) => showMessages({ errors: [error.message] }))
+  onSave: () => saveEntry({ quiet: true }).catch((error) => showMessages({ errors: [error.message] }))
 });
 
 $('#line-wrapping').checked = lineWrapping;
