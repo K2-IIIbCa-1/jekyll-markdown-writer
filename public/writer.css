@@ -266,6 +266,10 @@ dialog select:focus { border-color: var(--accent); }
 .media-tab-row-grid select { width: 100%; min-width: 0; }
 .media-tab-field-wide { grid-column: 1 / -1; }
 .media-tab-field-mime { grid-column: span 2; }
+.media-tab-source-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px; }
+.media-tab-row-grid .media-tab-upload { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 36px; padding-inline: 9px; white-space: nowrap; }
+.media-tab-upload.disabled { cursor: not-allowed; opacity: 0.55; pointer-events: none; }
+.media-tab-upload input { display: none; }
 .media-tab-remove { width: 28px; height: 28px; border-color: transparent; color: var(--muted); background: transparent; }
 .media-tab-remove:hover { border-color: var(--danger); color: var(--danger); background: transparent; }
 .media-tabs-add-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
@@ -367,4 +371,5 @@ dialog select:focus { border-color: var(--accent); }
   .media-tab-row-grid { grid-template-columns: 1fr; }
   .media-tab-field-wide { grid-column: auto; }
   .media-tab-field-mime { grid-column: auto; }
+  .media-tab-source-row { grid-column: 1 / -1; }
 }

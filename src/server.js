@@ -43,7 +43,11 @@ const MIME_TYPES = {
   '.mov': 'video/quicktime',
   '.mp4': 'video/mp4',
   '.ogv': 'video/ogg',
-  '.webm': 'video/webm'
+  '.webm': 'video/webm',
+  '.m4a': 'audio/mp4',
+  '.mp3': 'audio/mpeg',
+  '.ogg': 'audio/ogg',
+  '.wav': 'audio/wav'
 };
 
 function json(response, status, value) {
@@ -434,18 +438,30 @@ async function nextObjectKey(configured, baseKey) {
 }
 
 async function handleUpload(kind, name, request, response) {
-  if (!config.r2Configured) return error(response, 503, 'R2 이미지 업로드가 설정되지 않았습니다.');
+  if (!config.r2Configured) return error(response, 503, 'R2 미디어 업로드가 설정되지 않았습니다.');
 
   const body = await readJson(request);
   const entry = kind === 'post' ? await getPost(name) : await getDraft(name);
-  const subpath = safeSubpath(entry.values.media_subpath, config.mediaDirectory);
   const fileName = safeFileName(body.fileName, 'image');
   const extensionContentType = MIME_TYPES[path.extname(fileName).toLowerCase()];
-  const contentType = String(extensionContentType || body.contentType || '');
-  const mediaType = contentType.startsWith('video/') ? 'video' : contentType.startsWith('image/') ? 'image' : '';
+  const contentType = String(extensionContentType || '');
+  const mediaType = contentType.startsWith('video/')
+    ? 'video'
+    : contentType.startsWith('audio/')
+      ? 'audio'
+      : contentType.startsWith('image/')
+        ? 'image'
+        : '';
+  const expectedMediaType = String(body.mediaType || '').trim().toLowerCase();
 
   if (!mediaType) {
-    return error(response, 400, '이미지 또는 영상 파일만 업로드할 수 있습니다.');
+    return error(response, 400, '지원하지 않는 미디어 확장자입니다.');
+  }
+  if (expectedMediaType && !['image', 'video', 'audio'].includes(expectedMediaType)) {
+    return error(response, 400, '잘못된 미디어 탭 타입입니다.');
+  }
+  if (expectedMediaType && expectedMediaType !== mediaType) {
+    return error(response, 400, `${expectedMediaType} 탭에는 ${mediaType} 파일을 업로드할 수 없습니다.`);
   }
 
   if (typeof body.data !== 'string' || !body.data) {
@@ -459,6 +475,7 @@ async function handleUpload(kind, name, request, response) {
     return error(response, 400, '파일 크기는 20MB 이하이어야 합니다.');
   }
 
+  const subpath = safeSubpath(body.mediaSubpath || entry.values.media_subpath, config.mediaDirectory);
   const baseKey = `${subpath}/${fileName}`;
   const key = await nextObjectKey(config.r2, baseKey);
   const uploaded = await uploadObject(config.r2, { key, body: file, contentType });
@@ -470,6 +487,8 @@ async function handleUpload(kind, name, request, response) {
   json(response, 201, {
     ...uploaded,
     mediaType,
+    contentType,
+    mimeSubtype: contentType.split('/')[1],
     markdown
   });
 }

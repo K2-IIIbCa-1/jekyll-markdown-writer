@@ -7,6 +7,7 @@ const state = {
   drafts: [],
   posts: [],
   dirty: false,
+  r2Configured: false,
   ai: {
     provider: 'openai',
     model: '',
@@ -509,6 +510,14 @@ const MEDIA_TAB_TYPES = [
   { value: 'video', label: 'Video' },
   { value: 'audio', label: 'Audio' }
 ];
+const MEDIA_UPLOAD_EXTENSIONS = {
+  image: ['.avif', '.gif', '.jpeg', '.jpg', '.png', '.svg', '.webp'],
+  video: ['.3g2', '.3gp', '.avi', '.m4v', '.mkv', '.mov', '.mp4', '.ogv', '.webm'],
+  audio: ['.m4a', '.mp3', '.ogg', '.wav']
+};
+const MEDIA_UPLOAD_ACCEPT = Object.fromEntries(
+  Object.entries(MEDIA_UPLOAD_EXTENSIONS).map(([type, extensions]) => [type, extensions.join(',')])
+);
 
 function mediaTabRows() {
   return $$('#media-tab-list .media-tab-row');
@@ -565,6 +574,8 @@ function nextMediaTabId() {
 function updateMediaTabRow(row) {
   const type = mediaTabRowValue(row, 'type');
   const source = row.querySelector('[data-field="src"]');
+  const upload = row.querySelector('.media-tab-upload-input');
+  const uploadControl = row.querySelector('.media-tab-upload');
   const altLabel = row.querySelector('[data-field="alt"]')?.closest('label');
   const mimeLabel = row.querySelector('[data-field="mime"]')?.closest('label');
   const posterLabel = row.querySelector('[data-field="poster"]')?.closest('label');
@@ -579,6 +590,12 @@ function updateMediaTabRow(row) {
   mimeLabel?.classList.toggle('hidden', !['video', 'audio'].includes(type));
   posterLabel?.classList.toggle('hidden', type !== 'video');
   if (mimeLabelText) mimeLabelText.textContent = type === 'video' ? 'Video MIME subtype' : 'Audio MIME subtype';
+  if (upload && uploadControl) {
+    upload.accept = MEDIA_UPLOAD_ACCEPT[type] || '';
+    upload.disabled = !state.r2Configured;
+    uploadControl.classList.toggle('disabled', !state.r2Configured);
+    uploadControl.title = state.r2Configured ? `Upload ${type} file` : 'Configure R2 to upload media';
+  }
 }
 
 function updateMediaTabsDefaultOptions() {
@@ -652,13 +669,27 @@ function addMediaTabRow(values = {}) {
     maxLength: 0
   });
   const labelField = createMediaTabField({ label: 'Label', field: 'label', value: values.label || '', placeholder: 'Image' });
-  const sourceField = createMediaTabField({ label: 'Source URL', field: 'src', value: values.src || '', required: true, wide: true, placeholder: 'https://example.com/image.png' });
+  const sourceField = createMediaTabField({ label: 'Source URL', field: 'src', value: values.src || '', required: true, placeholder: 'https://example.com/image.png' });
+  const sourceRow = document.createElement('div');
+  sourceRow.className = 'media-tab-source-row media-tab-field-wide';
+  const uploadControl = document.createElement('label');
+  uploadControl.className = 'button button-quiet upload-button media-tab-upload';
+  uploadControl.title = 'Upload media';
+  uploadControl.append(createIcon('upload'));
+  const uploadText = document.createElement('span');
+  uploadText.className = 'media-tab-upload-text';
+  uploadText.textContent = 'Upload';
+  const uploadInput = document.createElement('input');
+  uploadInput.className = 'media-tab-upload-input';
+  uploadInput.type = 'file';
+  uploadControl.append(uploadText, uploadInput);
+  sourceRow.append(sourceField, uploadControl);
   const altField = createMediaTabField({ label: 'Alt text', field: 'alt', value: values.alt || '', wide: true, placeholder: 'Optional image description' });
   const captionField = createMediaTabField({ label: 'Caption', field: 'caption', value: values.caption || '', wide: true, placeholder: 'Optional caption' });
   const mimeField = createMediaTabField({ label: 'MIME subtype', labelSuffix: '(auto detection)', field: 'mime', value: values.mime || values.video_type || values.audio_type || '', placeholder: 'mp4' });
   mimeField.classList.add('media-tab-field-mime');
   const posterField = createMediaTabField({ label: 'Poster URL', field: 'poster', value: values.poster || '', wide: true, placeholder: 'Optional video poster URL' });
-  grid.append(idField, typeField, labelField, sourceField, altField, captionField, mimeField, posterField);
+  grid.append(idField, typeField, labelField, sourceRow, altField, captionField, mimeField, posterField);
   row.append(head, grid);
   $('#media-tab-list').append(row);
 
@@ -667,6 +698,7 @@ function addMediaTabRow(values = {}) {
     updateMediaTabRow(row);
     updateMediaTabsDefaultOptions();
   });
+  uploadInput.addEventListener('change', (event) => uploadMediaTab(row, event));
   refreshMediaTabRows();
   return row;
 }
@@ -906,16 +938,63 @@ function applyFrontMatter(event) {
   $('#front-matter-dialog').close();
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function mediaTypeForFile(file) {
+  const name = String(file.name || '').toLowerCase();
+  const extension = name.slice(name.lastIndexOf('.'));
+
+  return Object.entries(MEDIA_UPLOAD_EXTENSIONS)
+    .find(([, extensions]) => extensions.includes(extension))?.[0] || '';
+}
+
+async function uploadMediaTab(row, event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const expectedType = mediaTabRowValue(row, 'type');
+    const detectedType = mediaTypeForFile(file);
+    const browserType = String(file.type || '').split('/')[0];
+
+    if (!detectedType) throw new Error('지원하지 않는 미디어 확장자입니다.');
+    if (detectedType !== expectedType || (browserType && browserType !== expectedType)) {
+      throw new Error(`${expectedType} 탭에는 ${detectedType} 파일을 업로드할 수 없습니다.`);
+    }
+
+    const result = await api(`/api/${state.kind}s/${encodeURIComponent(state.draft.name)}/upload`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        mediaType: expectedType,
+        mediaSubpath: parseFrontMatterForEditor().media_subpath,
+        data: await readFileAsDataUrl(file)
+      })
+    });
+    row.querySelector('[data-field="src"]').value = result.url;
+    const mime = row.querySelector('[data-field="mime"]');
+    if (mime && result.mimeSubtype) mime.value = result.mimeSubtype;
+    showMessages({ changes: [`업로드 완료: ${result.key}`] });
+  } catch (uploadError) {
+    showMessages({ errors: [uploadError.message] });
+  } finally {
+    event.target.value = '';
+  }
+}
+
 async function uploadImages(event) {
   if (!state.draft) return;
 
   for (const file of event.target.files) {
-    const data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    const data = await readFileAsDataUrl(file);
 
     try {
       const result = await api(`/api/${state.kind}s/${encodeURIComponent(state.draft.name)}/upload`, {
@@ -944,12 +1023,7 @@ async function uploadPreviewImage(event) {
 
   const file = event.target.files[0];
   try {
-    const data = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    const data = await readFileAsDataUrl(file);
     const result = await api(`/api/${state.kind}s/${encodeURIComponent(state.draft.name)}/upload`, {
       method: 'POST',
       body: JSON.stringify({ fileName: file.name, contentType: file.type, data })
@@ -981,6 +1055,7 @@ async function init() {
   const [config, preview] = await Promise.all([api('/api/config'), api('/api/preview/status')]);
   document.title = `${config.appName} — ${config.siteName}`;
   $('#app-title').textContent = config.appName;
+  state.r2Configured = config.r2Configured === true;
   $('#r2-status').textContent = config.r2Configured ? `R2: ${config.r2PublicBaseUrl}` : 'R2: not configured';
   $('#r2-status').classList.toggle('ready', config.r2Configured);
   $('#r2-status').classList.toggle('error', !config.r2Configured);
