@@ -99,6 +99,7 @@
             <button class="snippet-button icon-tool" data-snippet="math" type="button" title="Math" aria-label="Insert math block"><span data-icon="math"></span></button>
             <button class="snippet-button icon-tool" data-action="footnote" type="button" title="Footnote" aria-label="Insert footnote"><span data-icon="footnote"></span></button>
             <button class="snippet-button icon-tool" data-action="media" type="button" title="Media embed" aria-label="Insert media embed"><span data-icon="play"></span></button>
+            <button class="snippet-button icon-tool" data-action="media-tabs" type="button" title="Media tabs" aria-label="Insert media tabs"><span data-icon="layers"></span></button>
             <span class="toolbar-divider" aria-hidden="true"></span>
             <span class="toolbar-label">Format</span>
             <button class="snippet-button icon-tool format-button" data-format="bold" type="button" title="Bold" aria-label="Toggle bold"><span data-icon="bold"></span></button>
@@ -232,6 +233,32 @@
         <div class="dialog-actions">
           <button class="button button-quiet" value="cancel" type="submit" formnovalidate>Cancel</button>
           <button class="button button-primary" id="insert-media" value="default" type="submit">Insert</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="media-tabs-dialog">
+      <form id="media-tabs-form" method="dialog">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">MEDIA TABS</p>
+            <h2>Insert media tabs</h2>
+          </div>
+          <button class="icon-button dialog-close" value="cancel" type="submit" formnovalidate title="Close" aria-label="Close"><span data-icon="close"></span></button>
+        </div>
+        <p class="muted small media-tabs-help">한 영역에서 전환할 미디어를 등록합니다. 그룹은 Front matter에 저장되고, 현재 커서 위치에 include가 삽입됩니다.</p>
+        <label for="media-tabs-group-id">Group ID</label>
+        <input id="media-tabs-group-id" name="groupId" required pattern="[A-Za-z0-9][A-Za-z0-9_-]*" maxlength="80" placeholder="bst-case-2">
+        <label for="media-tabs-default">Default tab</label>
+        <select id="media-tabs-default" name="default"></select>
+        <div id="media-tab-list" class="media-tab-list"></div>
+        <div class="media-tabs-add-row">
+          <button id="add-media-tab" class="button button-quiet" type="button">+ Add tab</button>
+          <span id="media-tabs-count" class="muted small"></span>
+        </div>
+        <div class="dialog-actions">
+          <button class="button button-quiet" value="cancel" type="submit" formnovalidate>Cancel</button>
+          <button class="button button-primary" id="insert-media-tabs" value="default" type="submit">Insert</button>
         </div>
       </form>
     </dialog>

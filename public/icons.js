@@ -19,6 +19,11 @@ const ICONS = {
   play: [
     ['polygon', { points: '6 3 20 12 6 21 6 3' }]
   ],
+  layers: [
+    ['path', { d: 'm12 2 9 5-9 5-9-5 9-5Z' }],
+    ['path', { d: 'm3 12 9 5 9-5' }],
+    ['path', { d: 'm3 17 9 5 9-5' }]
+  ],
   workflow: [
     ['rect', { width: '7', height: '7', x: '3', y: '3', rx: '1' }],
     ['rect', { width: '7', height: '7', x: '14', y: '14', rx: '1' }],

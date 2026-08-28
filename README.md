@@ -107,7 +107,7 @@ AI_API_KEY=your-gemini-api-key
 
 ### 기타
 
-코드블록·미디어·프롬프트·대표 이미지 등은 편집기의 각 삽입 버튼에서 사용할 수 있습니다. Git 기능을 사용하려면 `JEKYLL_ROOT`를 블로그 저장소로 지정한 뒤 `Git status → Commit → Push` 순서로 실행합니다.
+코드블록·미디어·미디어 탭·프롬프트·대표 이미지 등은 편집기의 각 삽입 버튼에서 사용할 수 있습니다. `Media tabs`는 Front matter의 `media_tab_groups`와 본문 include를 함께 생성하며 Image·Video·Audio 탭을 지원합니다. Git 기능을 사용하려면 `JEKYLL_ROOT`를 블로그 저장소로 지정한 뒤 `Git status → Commit → Push` 순서로 실행합니다.
 
 </details>
 

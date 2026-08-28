@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { insertFootnote, isInsideFencedCode, toggleDelimited, toggleHtmlClass, updateFrontMatter } from '../src/formatting.js';
+import { insertFootnote, insertMediaTabGroup, isInsideFencedCode, toggleDelimited, toggleHtmlClass, updateFrontMatter } from '../src/formatting.js';
 
 function applyChanges(source, changes) {
   return [...changes].reverse().reduce(
@@ -106,4 +106,40 @@ test('adds nested preview image fields when image is absent', () => {
   const result = updateFrontMatter(source, { image: { path: 'cover.png', alt: 'Cover' } });
 
   assert.equal(result, '---\ntitle: Test\nimage:\n  path: "cover.png"\n  alt: "Cover"\n---\n\nBody\n');
+});
+
+test('adds and appends media tab groups to front matter', () => {
+  const group = {
+    id: 'bst-case-2',
+    default: 'image',
+    tabs: [
+      { id: 'image', type: 'image', label: 'Image', src: 'image.png', alt: 'Tree' },
+      { id: 'video', type: 'video', label: 'Video', src: 'video.mp4', caption: 'Animation' }
+    ]
+  };
+  const first = insertMediaTabGroup('---\ntitle: Test\n---\n\nBody\n', group);
+
+  assert.equal(first.error, '');
+  assert.match(first.content, /media_tab_groups:/u);
+  assert.match(first.content, /- id: "bst-case-2"/u);
+  assert.match(first.content, /type: "video"/u);
+
+  const second = insertMediaTabGroup(first.content, {
+    id: 'alternate',
+    tabs: [{ id: 'source', type: 'image', src: 'source.png' }]
+  });
+
+  assert.equal(second.error, '');
+  assert.equal((second.content.match(/- id: "(?:bst-case-2|alternate)"/gu) || []).length, 2);
+});
+
+test('rejects duplicate media tab groups', () => {
+  const source = '---\ntitle: Test\nmedia_tab_groups:\n  - id: "same"\n    tabs:\n      - id: "image"\n        type: "image"\n        src: "image.png"\n---\n\nBody\n';
+  const result = insertMediaTabGroup(source, {
+    id: 'same',
+    tabs: [{ id: 'video', type: 'video', src: 'video.mp4' }]
+  });
+
+  assert.equal(result.content, null);
+  assert.match(result.error, /이미 존재하는/u);
 });

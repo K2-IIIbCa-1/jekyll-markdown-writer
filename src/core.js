@@ -163,7 +163,7 @@ export function normalizeContent(content) {
   const requirements = [
     { key: 'mermaid', pattern: /(^|\n)```mermaid\b/i, label: 'Mermaid', value: true },
     { key: 'math', pattern: /\$\$|\\begin\{(?:equation|align|gather)/, label: 'MathJax', value: true },
-    { key: 'render_with_liquid', pattern: /\{%\s*include\s+embed\//u, label: 'Liquid', value: true }
+    { key: 'render_with_liquid', pattern: /\{%\s*include\s+(?:embed\/|media-tabs\.html\b)/u, label: 'Liquid', value: true }
   ];
 
   requirements.forEach(({ key, pattern, label, value }) => {

@@ -30,7 +30,7 @@ import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { oneDarkTheme } from '@codemirror/theme-one-dark';
 import { HighlightStyle, LanguageDescription, LanguageSupport, StreamLanguage, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { insertFootnote, isInsideFencedCode, toggleDelimited, toggleHtmlClass, updateFrontMatter } from './formatting.js';
+import { insertFootnote, insertMediaTabGroup as insertMediaTabGroupMarkup, isInsideFencedCode, toggleDelimited, toggleHtmlClass, updateFrontMatter } from './formatting.js';
 
 const legacyLanguage = (name, alias, parser) => LanguageDescription.of({
   name,
@@ -226,6 +226,24 @@ const writerTheme = EditorView.theme({
   }
 }, { dark: true });
 
+function mapBodySelection(current, next, selection) {
+  const currentMatch = String(current).match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/u);
+  const nextMatch = String(next).match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/u);
+  if (!currentMatch || !nextMatch) return null;
+
+  const currentBodyStart = currentMatch[0].length;
+  const nextBodyStart = nextMatch[0].length;
+  const bodyDelta = nextBodyStart - currentBodyStart;
+  const mapPosition = (position) => position >= currentBodyStart
+    ? Math.min(next.length, position + bodyDelta)
+    : Math.min(position, nextBodyStart);
+
+  return {
+    anchor: mapPosition(selection.from),
+    head: mapPosition(selection.to)
+  };
+}
+
 export function createMarkdownEditor({ parent, value = '', wrapLines = false, onChange, onSave }) {
   let suppressChange = false;
   const lineWrapping = new Compartment();
@@ -309,9 +327,26 @@ export function createMarkdownEditor({ parent, value = '', wrapLines = false, on
       const current = view.state.doc.toString();
       const next = updateFrontMatter(current, updates);
       if (!next || next === current) return false;
-      view.dispatch({ changes: { from: 0, to: current.length, insert: next } });
+      const selection = mapBodySelection(current, next, view.state.selection.main);
+      view.dispatch({
+        changes: { from: 0, to: current.length, insert: next },
+        ...(selection ? { selection } : {})
+      });
       view.focus();
       return true;
+    },
+    insertMediaTabGroup: (group) => {
+      const current = view.state.doc.toString();
+      const result = insertMediaTabGroupMarkup(current, group);
+      if (!result.content || result.content === current) return result;
+
+      const selection = mapBodySelection(current, result.content, view.state.selection.main);
+      view.dispatch({
+        changes: { from: 0, to: current.length, insert: result.content },
+        ...(selection ? { selection } : {})
+      });
+      view.focus();
+      return { ...result, ok: true };
     },
     isInsideFencedCode: () => isInsideFencedCode(view.state.doc.toString(), view.state.selection.main.from),
     setLineWrapping: (enabled) => view.dispatch({

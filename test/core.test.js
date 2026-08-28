@@ -42,6 +42,13 @@ test('auto-enables Liquid for theme media includes', () => {
   assert.equal(result.changes.length, 1);
 });
 
+test('auto-enables Liquid for media tab includes', () => {
+  const result = normalizeContent('---\ntitle: Test\n---\n\n{% include media-tabs.html group_id="demo" %}\n');
+
+  assert.match(result.content, /render_with_liquid: true/);
+  assert.equal(result.changes.length, 1);
+});
+
 test('reports invalid front matter and unclosed fences', () => {
   const result = validateContent('---\ntitle: Test\n---\n\n```js\nconst x = 1;\n', { draft: true });
 

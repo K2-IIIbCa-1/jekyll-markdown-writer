@@ -503,6 +503,258 @@ function insertMedia(event) {
   $('#media-dialog').close();
 }
 
+const MEDIA_TAB_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/u;
+const MEDIA_TAB_TYPES = [
+  { value: 'image', label: 'Image' },
+  { value: 'video', label: 'Video' },
+  { value: 'audio', label: 'Audio' }
+];
+
+function mediaTabRows() {
+  return $$('#media-tab-list .media-tab-row');
+}
+
+function mediaTabRowValue(row, field) {
+  return row.querySelector(`[data-field="${field}"]`)?.value.trim() || '';
+}
+
+function createMediaTabField({ label, labelSuffix = '', field, controlType = 'input', options = [], value = '', required = false, pattern = '', placeholder = '', maxLength = 240, wide = false }) {
+  const wrapper = document.createElement('label');
+  if (wide) wrapper.classList.add('media-tab-field-wide');
+
+  const labelLine = document.createElement('span');
+  const labelText = document.createElement('span');
+  labelText.className = 'media-tab-field-label';
+  labelText.textContent = label;
+  labelLine.append(labelText);
+  if (labelSuffix) {
+    const suffix = document.createElement('span');
+    suffix.className = 'media-tab-label-suffix';
+    suffix.textContent = ` ${labelSuffix}`;
+    labelLine.append(suffix);
+  }
+  const control = controlType === 'select' ? document.createElement('select') : document.createElement('input');
+  control.dataset.field = field;
+  control.value = String(value ?? '');
+  control.required = required;
+  if (pattern) control.pattern = pattern;
+  if (placeholder) control.placeholder = placeholder;
+  if (maxLength) control.maxLength = maxLength;
+
+  if (controlType === 'select') {
+    options.forEach(({ value: optionValue, label: optionLabel }) => {
+      const option = document.createElement('option');
+      option.value = optionValue;
+      option.textContent = optionLabel;
+      control.append(option);
+    });
+    control.value = MEDIA_TAB_TYPES.some((type) => type.value === value) ? value : options[0]?.value || '';
+  }
+
+  wrapper.append(labelLine, control);
+  return wrapper;
+}
+
+function nextMediaTabId() {
+  const used = new Set(mediaTabRows().map((row) => mediaTabRowValue(row, 'id').toLowerCase()));
+  let index = 1;
+  while (used.has(`tab-${index}`)) index += 1;
+  return `tab-${index}`;
+}
+
+function updateMediaTabRow(row) {
+  const type = mediaTabRowValue(row, 'type');
+  const source = row.querySelector('[data-field="src"]');
+  const altLabel = row.querySelector('[data-field="alt"]')?.closest('label');
+  const mimeLabel = row.querySelector('[data-field="mime"]')?.closest('label');
+  const posterLabel = row.querySelector('[data-field="poster"]')?.closest('label');
+  const mimeLabelText = mimeLabel?.querySelector('.media-tab-field-label');
+
+  source.placeholder = type === 'video'
+    ? 'https://example.com/video.mp4'
+    : type === 'audio'
+      ? 'https://example.com/audio.mp3'
+      : 'https://example.com/image.png';
+  altLabel?.classList.toggle('hidden', type !== 'image');
+  mimeLabel?.classList.toggle('hidden', !['video', 'audio'].includes(type));
+  posterLabel?.classList.toggle('hidden', type !== 'video');
+  if (mimeLabelText) mimeLabelText.textContent = type === 'video' ? 'Video MIME subtype' : 'Audio MIME subtype';
+}
+
+function updateMediaTabsDefaultOptions() {
+  const select = $('#media-tabs-default');
+  const current = select.value;
+  const rows = mediaTabRows();
+  select.replaceChildren();
+
+  rows.forEach((row, index) => {
+    const id = mediaTabRowValue(row, 'id');
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = id || `Tab ${index + 1}`;
+    select.append(option);
+  });
+
+  if (rows.some((row) => mediaTabRowValue(row, 'id') === current)) select.value = current;
+  else if (select.options.length) select.selectedIndex = 0;
+}
+
+function refreshMediaTabRows() {
+  const rows = mediaTabRows();
+  rows.forEach((row, index) => {
+    const heading = row.querySelector('.media-tab-row-head strong');
+    const remove = row.querySelector('.media-tab-remove');
+    heading.textContent = `Tab ${index + 1}`;
+    remove.setAttribute('aria-label', `Remove tab ${index + 1}`);
+    updateMediaTabRow(row);
+  });
+  $('#media-tabs-count').textContent = `${rows.length} tab${rows.length === 1 ? '' : 's'}`;
+  updateMediaTabsDefaultOptions();
+}
+
+function addMediaTabRow(values = {}) {
+  const row = document.createElement('div');
+  row.className = 'media-tab-row';
+
+  const head = document.createElement('div');
+  head.className = 'media-tab-row-head';
+  const heading = document.createElement('strong');
+  heading.textContent = 'Tab';
+  const remove = document.createElement('button');
+  remove.className = 'icon-button media-tab-remove';
+  remove.type = 'button';
+  remove.title = 'Remove tab';
+  remove.setAttribute('aria-label', 'Remove tab');
+  remove.append(createIcon('trash'));
+  remove.addEventListener('click', () => {
+    row.remove();
+    refreshMediaTabRows();
+  });
+  head.append(heading, remove);
+
+  const grid = document.createElement('div');
+  grid.className = 'media-tab-row-grid';
+  const idField = createMediaTabField({
+    label: 'ID',
+    field: 'id',
+    value: values.id || '',
+    required: true,
+    pattern: MEDIA_TAB_ID_PATTERN.source,
+    maxLength: 80,
+    placeholder: 'image'
+  });
+  const typeField = createMediaTabField({
+    label: 'Type',
+    field: 'type',
+    controlType: 'select',
+    options: MEDIA_TAB_TYPES,
+    value: values.type || 'image',
+    maxLength: 0
+  });
+  const labelField = createMediaTabField({ label: 'Label', field: 'label', value: values.label || '', placeholder: 'Image' });
+  const sourceField = createMediaTabField({ label: 'Source URL', field: 'src', value: values.src || '', required: true, wide: true, placeholder: 'https://example.com/image.png' });
+  const altField = createMediaTabField({ label: 'Alt text', field: 'alt', value: values.alt || '', wide: true, placeholder: 'Optional image description' });
+  const captionField = createMediaTabField({ label: 'Caption', field: 'caption', value: values.caption || '', wide: true, placeholder: 'Optional caption' });
+  const mimeField = createMediaTabField({ label: 'MIME subtype', labelSuffix: '(auto detection)', field: 'mime', value: values.mime || values.video_type || values.audio_type || '', placeholder: 'mp4' });
+  mimeField.classList.add('media-tab-field-mime');
+  const posterField = createMediaTabField({ label: 'Poster URL', field: 'poster', value: values.poster || '', wide: true, placeholder: 'Optional video poster URL' });
+  grid.append(idField, typeField, labelField, sourceField, altField, captionField, mimeField, posterField);
+  row.append(head, grid);
+  $('#media-tab-list').append(row);
+
+  idField.querySelector('[data-field="id"]').addEventListener('input', updateMediaTabsDefaultOptions);
+  typeField.querySelector('[data-field="type"]').addEventListener('change', () => {
+    updateMediaTabRow(row);
+    updateMediaTabsDefaultOptions();
+  });
+  refreshMediaTabRows();
+  return row;
+}
+
+function openMediaTabsDialog() {
+  if (!state.draft) return;
+
+  $('#media-tabs-form').reset();
+  const list = $('#media-tab-list');
+  list.replaceChildren();
+  addMediaTabRow({ id: 'image', type: 'image', label: 'Image' });
+  addMediaTabRow({ id: 'video', type: 'video', label: 'Video' });
+  refreshMediaTabRows();
+  list.scrollTop = 0;
+  openDialog('media-tabs-dialog');
+  $('#media-tabs-group-id').focus();
+}
+
+function insertMediaTabs(event) {
+  if (event.submitter?.id !== 'insert-media-tabs') return;
+
+  event.preventDefault();
+  const groupId = $('#media-tabs-group-id').value.trim();
+  if (!MEDIA_TAB_ID_PATTERN.test(groupId)) {
+    showMessages({ errors: ['Group ID는 영문/숫자로 시작하고 영문·숫자·하이픈·밑줄만 사용할 수 있습니다.'] });
+    return;
+  }
+
+  const rows = mediaTabRows();
+  if (!rows.length) {
+    showMessages({ errors: ['미디어 탭을 하나 이상 추가하세요.'] });
+    return;
+  }
+
+  const ids = new Set();
+  const tabs = [];
+  for (const row of rows) {
+    const id = mediaTabRowValue(row, 'id');
+    const type = mediaTabRowValue(row, 'type');
+    const src = mediaTabRowValue(row, 'src');
+
+    if (!MEDIA_TAB_ID_PATTERN.test(id)) {
+      showMessages({ errors: ['각 탭의 ID는 영문/숫자로 시작하고 영문·숫자·하이픈·밑줄만 사용할 수 있습니다.'] });
+      return;
+    }
+    if (ids.has(id.toLowerCase())) {
+      showMessages({ errors: [`탭 ID가 중복됩니다: ${id}`] });
+      return;
+    }
+    if (!src) {
+      showMessages({ errors: [`탭의 Source URL을 입력하세요: ${id}`] });
+      return;
+    }
+
+    ids.add(id.toLowerCase());
+    const tab = { id, type, label: mediaTabRowValue(row, 'label'), src };
+    const alt = mediaTabRowValue(row, 'alt');
+    const caption = mediaTabRowValue(row, 'caption');
+    const mime = mediaTabRowValue(row, 'mime');
+    const poster = mediaTabRowValue(row, 'poster');
+    if (type === 'image' && alt) tab.alt = alt;
+    if (caption) tab.caption = caption;
+    if (type === 'video' && mime) tab.video_type = mime;
+    if (type === 'audio' && mime) tab.audio_type = mime;
+    if (type === 'video' && poster) tab.poster = poster;
+    tabs.push(tab);
+  }
+
+  const group = {
+    id: groupId,
+    default: $('#media-tabs-default').value || tabs[0].id,
+    tabs
+  };
+  const result = markdownEditor.insertMediaTabGroup(group);
+  if (!result?.ok) {
+    showMessages({ errors: [result?.error || '미디어 탭을 삽입할 수 없습니다.'] });
+    return;
+  }
+
+  const changes = [`Media tabs inserted: ${groupId}`];
+  if (parseFrontMatterForEditor().render_with_liquid !== true && markdownEditor.updateFrontMatter({ render_with_liquid: true })) {
+    changes.push('Liquid rendering enabled.');
+  }
+  insertText(`{% include media-tabs.html group_id=${quoteLiquid(groupId)} %}\n`);
+  $('#media-tabs-dialog').close();
+  showMessages({ changes });
+}
+
 function parseFrontMatterForEditor() {
   const match = markdownEditor.getValue().match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u);
   const values = { ...(state.draft?.values || {}) };
@@ -647,7 +899,7 @@ function applyFrontMatter(event) {
     showMessages({ errors: ['Front matter를 찾을 수 없습니다.'] });
     return;
   }
-  if (updates.render_with_liquid === false && /\{%\s*include\s+embed\//iu.test(markdownEditor.getValue())) {
+  if (updates.render_with_liquid === false && /\{%\s*include\s+(?:embed\/|media-tabs\.html\b)/iu.test(markdownEditor.getValue())) {
     showMessages({ warnings: ['Liquid 렌더링을 끄면 미디어 임베드도 표시되지 않습니다.'] });
   }
   saveAiSettings();
@@ -796,6 +1048,7 @@ $('#new-draft-form').addEventListener('submit', (event) => {
 });
 $('#code-form').addEventListener('submit', insertCodeBlock);
 $('#media-form').addEventListener('submit', insertMedia);
+$('#media-tabs-form').addEventListener('submit', insertMediaTabs);
 $('#front-matter-form').addEventListener('submit', applyFrontMatter);
 $('#ai-provider').addEventListener('change', () => {
   updateAiProviderFields();
@@ -811,6 +1064,7 @@ $('#ai-remember-key').addEventListener('change', () => {
 });
 $('#generate-description').addEventListener('click', () => generateDescription());
 $('#media-type').addEventListener('change', updateMediaDialog);
+$('#add-media-tab').addEventListener('click', () => addMediaTabRow({ id: nextMediaTabId(), type: 'image' }));
 $$('[data-action="code-block"]').forEach((button) => button.addEventListener('click', () => {
   $('#code-form').reset();
   $('#code-language').value = 'plaintext';
@@ -821,6 +1075,7 @@ $$('[data-action="media"]').forEach((button) => button.addEventListener('click',
   updateMediaDialog();
   openDialog('media-dialog');
 }));
+$$('[data-action="media-tabs"]').forEach((button) => button.addEventListener('click', openMediaTabsDialog));
 $$('[data-action="front-matter"]').forEach((button) => button.addEventListener('click', openFrontMatterDialog));
 $('#save-draft').addEventListener('click', () => saveEntry().catch((error) => showMessages({ errors: [error.message] })));
 $('#validate-draft').addEventListener('click', () => validateEntry().catch((error) => showMessages({ errors: [error.message] })));

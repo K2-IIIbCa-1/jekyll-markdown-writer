@@ -215,3 +215,114 @@ export function updateFrontMatter(source, updates) {
 
   return `---\n${nextLines.join('\n')}\n---\n${String(source).slice(match[0].length)}`;
 }
+
+const MEDIA_TAB_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/u;
+const MEDIA_TAB_TYPES = new Set(['image', 'video', 'audio']);
+
+function yamlString(value) {
+  return JSON.stringify(String(value ?? '').trim());
+}
+
+function unquoteYamlString(value) {
+  const trimmed = String(value || '').trim();
+
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return trimmed.slice(1, -1);
+    }
+  }
+
+  return trimmed.replace(/^['"]|['"]$/gu, '');
+}
+
+function mediaTabGroupLines(group) {
+  const groupId = String(group?.id || '').trim();
+  const tabs = Array.isArray(group?.tabs) ? group.tabs : [];
+
+  if (!MEDIA_TAB_ID_PATTERN.test(groupId)) return { error: '미디어 탭 그룹 ID는 영문/숫자/_/-로 입력하세요.' };
+  if (!tabs.length) return { error: '미디어 탭을 하나 이상 추가하세요.' };
+
+  const normalizedTabs = [];
+  const tabIds = new Set();
+
+  for (const tab of tabs) {
+    const id = String(tab?.id || '').trim();
+    const type = String(tab?.type || '').trim().toLowerCase();
+    const src = String(tab?.src || '').trim();
+
+    if (!MEDIA_TAB_ID_PATTERN.test(id)) return { error: '각 탭의 ID는 영문/숫자/_/-로 입력하세요.' };
+    if (tabIds.has(id.toLowerCase())) return { error: `탭 ID가 중복됩니다: ${id}` };
+    if (!MEDIA_TAB_TYPES.has(type)) return { error: `지원하지 않는 미디어 유형입니다: ${type || '(없음)'}` };
+    if (!src) return { error: `탭의 미디어 URL을 입력하세요: ${id}` };
+
+    tabIds.add(id.toLowerCase());
+    normalizedTabs.push({ ...tab, id, type, src });
+  }
+
+  const requestedDefault = String(group.default || '').trim();
+  const defaultTab = normalizedTabs.find((tab) => tab.id === requestedDefault)?.id || normalizedTabs[0].id;
+  const lines = [
+    `  - id: ${yamlString(groupId)}`,
+    `    default: ${yamlString(defaultTab)}`,
+    '    tabs:'
+  ];
+
+  normalizedTabs.forEach((tab) => {
+    lines.push(`      - id: ${yamlString(tab.id)}`);
+    lines.push(`        type: ${yamlString(tab.type)}`);
+    if (tab.label) lines.push(`        label: ${yamlString(tab.label)}`);
+    lines.push(`        src: ${yamlString(tab.src)}`);
+    if (tab.alt) lines.push(`        alt: ${yamlString(tab.alt)}`);
+    if (tab.caption) lines.push(`        caption: ${yamlString(tab.caption)}`);
+    if (tab.poster && tab.type === 'video') lines.push(`        poster: ${yamlString(tab.poster)}`);
+    if (tab.video_type && tab.type === 'video') lines.push(`        video_type: ${yamlString(tab.video_type)}`);
+    if (tab.audio_type && tab.type === 'audio') lines.push(`        audio_type: ${yamlString(tab.audio_type)}`);
+  });
+
+  return { groupId, lines };
+}
+
+export function insertMediaTabGroup(source, group) {
+  const match = String(source).match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u);
+  if (!match) return { content: null, error: 'Front matter를 찾을 수 없습니다.' };
+
+  const generated = mediaTabGroupLines(group);
+  if (generated.error) return { content: null, error: generated.error };
+
+  const lines = match[1].split(/\r?\n/u);
+  const groupIndex = lines.findIndex((line) => /^media_tab_groups:\s*$/u.test(line));
+  const inlineGroupIndex = lines.findIndex((line) => /^media_tab_groups:\s+\S/u.test(line));
+
+  if (inlineGroupIndex >= 0) {
+    return { content: null, error: '기존 media_tab_groups가 인라인 형식이라 자동으로 추가할 수 없습니다.' };
+  }
+
+  let insertAt;
+
+  if (groupIndex < 0) {
+    insertAt = lines.length;
+    while (insertAt > 0 && lines[insertAt - 1].trim() === '') insertAt -= 1;
+    lines.splice(insertAt, 0, 'media_tab_groups:', ...generated.lines);
+  } else {
+    insertAt = groupIndex + 1;
+    let groupItemIndent = null;
+
+    while (insertAt < lines.length && /^\s+/.test(lines[insertAt])) {
+      const item = lines[insertAt].match(/^(\s*)-\s+id:\s*(.+)$/u);
+      if (item && groupItemIndent === null) groupItemIndent = item[1].length;
+      if (item && item[1].length === groupItemIndent && unquoteYamlString(item[2]) === generated.groupId) {
+        return { content: null, error: `이미 존재하는 미디어 탭 그룹입니다: ${generated.groupId}` };
+      }
+      insertAt += 1;
+    }
+
+    lines.splice(insertAt, 0, ...generated.lines);
+  }
+
+  return {
+    content: `---\n${lines.join('\n')}\n---\n${String(source).slice(match[0].length)}`,
+    error: ''
+  };
+}
