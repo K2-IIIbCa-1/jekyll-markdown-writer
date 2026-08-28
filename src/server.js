@@ -440,7 +440,7 @@ async function nextObjectKey(configured, baseKey) {
 async function handleUpload(kind, name, request, response) {
   if (!config.r2Configured) return error(response, 503, 'R2 미디어 업로드가 설정되지 않았습니다.');
 
-  const body = await readJson(request);
+  const body = await readJson(request, 72 * 1024 * 1024);
   const entry = kind === 'post' ? await getPost(name) : await getDraft(name);
   const fileName = safeFileName(body.fileName, 'image');
   const extensionContentType = MIME_TYPES[path.extname(fileName).toLowerCase()];
@@ -471,8 +471,8 @@ async function handleUpload(kind, name, request, response) {
   const base64 = body.data.replace(/^data:[^;]+;base64,/, '');
   const file = Buffer.from(base64, 'base64');
 
-  if (!file.length || file.length > 20 * 1024 * 1024) {
-    return error(response, 400, '파일 크기는 20MB 이하이어야 합니다.');
+  if (!file.length || file.length > 50 * 1024 * 1024) {
+    return error(response, 400, '파일 크기는 50MiB 이하이어야 합니다.');
   }
 
   const subpath = safeSubpath(body.mediaSubpath || entry.values.media_subpath, config.mediaDirectory);

@@ -4,7 +4,7 @@
 
 
 ![](https://img.shields.io/badge/Made_With-Codex-white)
-[![](https://img.shields.io/badge/For-Chirpy_Jekyll_Theme-black)](https://github.com/cotes2020/jekyll-theme-chirpy)
+![](https://img.shields.io/badge/For-Jekyll-black)
 [![](https://img.shields.io/badge/Works_With-Cloudflare_R2-orange)](https://www.cloudflare.com/ko-kr/developer-platform/products/r2/)
 
 </div>
@@ -80,8 +80,6 @@ R2_BUCKET=
 R2_PUBLIC_BASE_URL=
 R2_JURISDICTION=default
 ```
-
-`Upload image or video` accepts images and common video files. Images are inserted as Markdown; videos are inserted with the Jekyll `embed/video.html` include. Each file is limited to 20 MB, and multiple files are uploaded sequentially.
 
 이미지는 다음처럼 저장됩니다.
 
