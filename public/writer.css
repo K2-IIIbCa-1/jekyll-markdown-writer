@@ -68,7 +68,7 @@ h1,
 .top-actions,
 .editor-actions,
 .dialog-actions { display: flex; align-items: center; gap: 8px; }
-.sidebar-toggle { display: none; }
+.sidebar-toggle { display: inline-flex; }
 
 .button,
 .snippet-button,
@@ -310,8 +310,6 @@ dialog select:focus { border-color: var(--accent); }
     white-space: nowrap;
   }
 
-  .sidebar-toggle { display: inline-flex; }
-
   .app-shell { display: block; min-height: calc(100vh - 76px); }
 
   .sidebar {
@@ -372,4 +370,9 @@ dialog select:focus { border-color: var(--accent); }
   .media-tab-field-wide { grid-column: auto; }
   .media-tab-field-mime { grid-column: auto; }
   .media-tab-source-row { grid-column: 1 / -1; }
+}
+
+@media (min-width: 721px) {
+  body.sidebar-collapsed .app-shell { grid-template-columns: minmax(0, 1fr); }
+  body.sidebar-collapsed .sidebar { display: none; }
 }

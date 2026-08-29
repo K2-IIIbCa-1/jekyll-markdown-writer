@@ -22,6 +22,7 @@ let markdownEditor;
 let imageUploadAlignment = 'default';
 const LINE_WRAPPING_STORAGE_KEY = 'jekyll-writer.line-wrapping';
 const AI_SETTINGS_STORAGE_KEY = 'jekyll-writer.ai-settings';
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'jekyll-writer.sidebar-collapsed';
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -598,6 +599,22 @@ function updateMediaTabRow(row) {
   }
 }
 
+function getStoredSidebarCollapsed() {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function storeSidebarCollapsed(collapsed) {
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
+  } catch {
+    // Ignore storage restrictions; the sidebar still changes for this session.
+  }
+}
+
 function updateMediaTabsDefaultOptions() {
   const select = $('#media-tabs-default');
   const current = select.value;
@@ -1077,9 +1094,40 @@ async function init() {
 
 const lineWrapping = getStoredLineWrapping();
 
+function isMobileSidebar() {
+  return window.matchMedia('(max-width: 720px)').matches;
+}
+
+function updateSidebarToggleState() {
+  const expanded = isMobileSidebar()
+    ? document.body.classList.contains('sidebar-open')
+    : !document.body.classList.contains('sidebar-collapsed');
+
+  $('#sidebar-toggle').setAttribute('aria-expanded', String(expanded));
+}
+
 function setSidebarOpen(open) {
   document.body.classList.toggle('sidebar-open', open);
-  $('#sidebar-toggle').setAttribute('aria-expanded', String(open));
+  updateSidebarToggleState();
+}
+
+function setSidebarCollapsed(collapsed) {
+  if (isMobileSidebar()) return;
+
+  document.body.classList.toggle('sidebar-collapsed', collapsed);
+  storeSidebarCollapsed(collapsed);
+  updateSidebarToggleState();
+}
+
+function syncSidebarMode() {
+  if (isMobileSidebar()) {
+    document.body.classList.remove('sidebar-collapsed');
+  } else {
+    document.body.classList.remove('sidebar-open');
+    document.body.classList.toggle('sidebar-collapsed', getStoredSidebarCollapsed());
+  }
+
+  updateSidebarToggleState();
 }
 
 function createIcon(name) {
@@ -1109,8 +1157,14 @@ $('#line-wrapping').addEventListener('change', (event) => {
   storeLineWrapping(enabled);
 });
 
+syncSidebarMode();
+window.addEventListener('resize', syncSidebarMode);
 $('#sidebar-toggle').addEventListener('click', () => {
-  setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+  if (isMobileSidebar()) {
+    setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+  } else {
+    setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+  }
 });
 $('#sidebar-backdrop').addEventListener('click', () => setSidebarOpen(false));
 
